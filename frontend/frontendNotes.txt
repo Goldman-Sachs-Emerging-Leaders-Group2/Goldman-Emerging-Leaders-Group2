@@ -1,1 +1,8 @@
 start the frontend server with "yarn dev"
+
+Build the frontend & connect to backend endpoints to retrieve data & populate the UI
+
+Dropdown component to select an MF to invest in
+Input component to write the initial investment amount
+Input component to choose the time horizon
+
