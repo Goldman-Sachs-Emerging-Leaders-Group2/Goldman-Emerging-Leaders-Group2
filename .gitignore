@@ -1,0 +1,24 @@
+# Maven build output
+target/
+
+# VS Code
+.vscode/
+
+# IntelliJ (if anyone uses it)
+.idea/
+*.iml
+
+# Node modules
+node_modules/
+
+# React build output
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
