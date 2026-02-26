@@ -1,35 +1,36 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
+import InvestmentForm from './components/InvestmentForm';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleCalculate = ({ fund, amount, years }) => {
+    setLoading(true);
+    setError('');
+
+    fetch(`/api/calc?fund=${encodeURIComponent(fund)}&amount=${amount}&years=${years}`)
+      .then(r => r.json())
+      .then(data => setResult(data))
+      .catch(() => setError('Calculation failed'))
+      .finally(() => setLoading(false));
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
+    <div className="app-container">
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+        <h1 className="title">Mutual Fund Calculator</h1>
+        <InvestmentForm onCalculate={handleCalculate} loading={loading} />
+        {loading && <div className="spinner" />}
+        {error && <p className="error">{error}</p>}
+        {result && !loading && <pre className="output">{JSON.stringify(result, null, 2)}</pre>}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
+
+
