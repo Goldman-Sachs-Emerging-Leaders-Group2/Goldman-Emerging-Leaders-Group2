@@ -1,6 +1,6 @@
 package com.goldmansachs.els.model;
 
 public record NewtonAnalyticsResponse(
-        double data
+        double data // beta value returned by Newton Analytics
 ) {
 }

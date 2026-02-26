@@ -5,7 +5,7 @@ A web app where users select a mutual fund, enter an investment amount and time 
 ## Prerequisites
 
 - **Java 21** — [Download](https://adoptium.net/)
-- **Maven 3.9+** — [Download](https://maven.apache.org/download.cgi) (or use the included `mvnw` wrapper)
+- **Maven 3.9+** — [Download](https://maven.apache.org/download.cgi)
 - **Node.js 18+** and **Yarn** — for the React frontend
 
 Verify your setup:
@@ -22,7 +22,7 @@ yarn --version   # should show 1.22+
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-org/Goldman-Emerging-Leaders-Group2.git
+git clone <your-repo-url>
 cd Goldman-Emerging-Leaders-Group2
 ```
 

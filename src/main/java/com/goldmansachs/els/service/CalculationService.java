@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CalculationService {
 
+    // US Treasury rate, used as the "zero risk" baseline in CAPM
     private static final double RISK_FREE_RATE = 0.0425;
 
     private final MutualFundService mutualFundService;
@@ -22,7 +23,9 @@ public class CalculationService {
         double beta = betaService.getBeta(ticker);
 
         double expectedMarketReturn = fund.expectedAnnualReturn();
+        // CAPM: rate = riskFreeRate + beta * (expectedReturn - riskFreeRate)
         double capmReturn = RISK_FREE_RATE + beta * (expectedMarketReturn - RISK_FREE_RATE);
+        // Future value: principal * (1 + rate) ^ years
         double futureValue = investment * Math.pow(1 + capmReturn, years);
 
         return new CalculationResult(

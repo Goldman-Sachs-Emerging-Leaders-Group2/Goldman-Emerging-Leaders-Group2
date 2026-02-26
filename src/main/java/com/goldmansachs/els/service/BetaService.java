@@ -4,6 +4,7 @@ import com.goldmansachs.els.model.NewtonAnalyticsResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+// Fetches a fund's beta (volatility relative to the S&P 500) from Newton Analytics
 @Service
 public class BetaService {
 

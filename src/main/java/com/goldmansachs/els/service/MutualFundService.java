@@ -8,6 +8,7 @@ import java.util.List;
 @Service
 public class MutualFundService {
 
+    // Hardcoded fund list with historical annual returns (decimal form)
     private final List<MutualFund> funds = List.of(
             new MutualFund("VFIAX", "Vanguard 500 Index Fund", 0.1553),
             new MutualFund("FXAIX", "Fidelity 500 Index Fund", 0.1556),
