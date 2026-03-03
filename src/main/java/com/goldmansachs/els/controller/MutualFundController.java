@@ -1,5 +1,7 @@
 package com.goldmansachs.els.controller;
 
+import com.goldmansachs.els.exception.InvalidInputException;
+import com.goldmansachs.els.exception.TickerNotFoundException;
 import com.goldmansachs.els.model.CalculationResult;
 import com.goldmansachs.els.model.MutualFund;
 import com.goldmansachs.els.service.CalculationService;
@@ -23,16 +25,34 @@ public class MutualFundController {
         this.calculationService = calculationService;
     }
 
-    @GetMapping("/mutualfunds")
+    @GetMapping({"/mutualfunds", "/mutual-funds"})
     public List<MutualFund> getAllFunds() {
         return mutualFundService.getAllFunds();
     }
 
-    @GetMapping("/calculate")
+    @GetMapping({"/calculate", "/investment/future-value"})
     public CalculationResult calculate(
             @RequestParam String ticker,
             @RequestParam double investment,
             @RequestParam int years) {
-        return calculationService.calculate(ticker, investment, years);
+        if (ticker == null || ticker.trim().isEmpty()) {
+            throw new InvalidInputException("ticker is required and must be non-blank.");
+        }
+        if (investment <= 0) {
+            throw new InvalidInputException("investment must be greater than 0.");
+        }
+        if (years < 0 || years > 100) {
+            throw new InvalidInputException("years must be between 0 and 100.");
+        }
+
+        try {
+            CalculationResult result = calculationService.calculate(ticker, investment, years);
+            if (result == null) {
+                throw new TickerNotFoundException(ticker);
+            }
+            return result;
+        } catch (IllegalArgumentException ex) {
+            throw new TickerNotFoundException(ticker);
+        }
     }
 }

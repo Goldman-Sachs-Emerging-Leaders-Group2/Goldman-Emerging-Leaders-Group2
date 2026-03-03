@@ -54,9 +54,16 @@ The React app will open at `http://localhost:5173`.
 
 ## API Endpoints
 
-### GET `/api/mutualfunds`
+### GET `/api/mutualfunds` (alias: `/api/mutual-funds`)
 
-Returns the list of available mutual funds.
+Returns the list of available mutual funds (both routes return the same payload).
+
+Example:
+
+```bash
+curl "http://localhost:8080/api/mutualfunds"
+curl "http://localhost:8080/api/mutual-funds"
+```
 
 ```json
 [
@@ -68,9 +75,21 @@ Returns the list of available mutual funds.
 ]
 ```
 
-### GET `/api/calculate?ticker=VFIAX&investment=10000&years=10`
+### GET `/api/calculate` (alias: `/api/investment/future-value`)
 
 Calculates the predicted future value using CAPM.
+
+Required query params:
+- `ticker` (non-blank)
+- `investment` (> 0)
+- `years` (0 to 100)
+
+Examples:
+
+```bash
+curl "http://localhost:8080/api/calculate?ticker=VFIAX&investment=10000&years=10"
+curl "http://localhost:8080/api/investment/future-value?ticker=VFIAX&investment=10000&years=10"
+```
 
 ```json
 {
@@ -84,6 +103,16 @@ Calculates the predicted future value using CAPM.
   "capmReturn": 0.1553,
   "futureValue": 42317.69
 }
+```
+
+Error responses:
+
+```json
+{ "error": "INVALID_INPUT", "message": "<human-readable>" }
+```
+
+```json
+{ "error": "TICKER_NOT_FOUND", "message": "Ticker '<ticker>' is not supported." }
 ```
 
 ## Project Structure
