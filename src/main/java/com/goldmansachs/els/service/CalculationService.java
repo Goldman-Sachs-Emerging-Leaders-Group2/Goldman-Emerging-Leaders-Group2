@@ -12,21 +12,29 @@ public class CalculationService {
 
     private final MutualFundService mutualFundService;
     private final BetaService betaService;
+    private final HistoricalReturnService historicalReturnService;
 
-    public CalculationService(MutualFundService mutualFundService, BetaService betaService) {
+    public CalculationService(
+            MutualFundService mutualFundService,
+            BetaService betaService,
+            HistoricalReturnService historicalReturnService
+    ) {
         this.mutualFundService = mutualFundService;
         this.betaService = betaService;
+        this.historicalReturnService = historicalReturnService;
     }
 
     public CalculationResult calculate(String ticker, double investment, int years) {
         MutualFund fund = mutualFundService.getFundByTicker(ticker);
         double beta = betaService.getBeta(ticker);
 
-        double expectedMarketReturn = fund.expectedAnnualReturn();
+        double expectedMarketReturn = historicalReturnService
+            .getLastYearExpectedReturn(ticker)
+            .orElse(fund.expectedAnnualReturn());
         // CAPM: rate = riskFreeRate + beta * (expectedReturn - riskFreeRate)
         double capmReturn = RISK_FREE_RATE + beta * (expectedMarketReturn - RISK_FREE_RATE);
-        // Future value: principal * (1 + rate) ^ years
-        double futureValue = investment * Math.pow(1 + capmReturn, years);
+        // Future value: principal * e^(rate * years)
+        double futureValue = investment * Math.exp(capmReturn * years);
 
         return new CalculationResult(
                 fund.ticker(),
