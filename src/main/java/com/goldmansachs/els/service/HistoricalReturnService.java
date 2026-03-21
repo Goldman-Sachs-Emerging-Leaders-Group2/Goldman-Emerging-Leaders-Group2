@@ -80,28 +80,34 @@ public class HistoricalReturnService {
 
             return OptionalDouble.of(expectedReturn);
         } catch (Exception ex) {
+            logger.warn("Failed to fetch historical return for {}: {}", ticker, ex.getMessage());
             return OptionalDouble.empty();
         }
     }
 
     private YahooChartResponse fetchYahooChartResponse(String ticker) {
         try {
-            YahooChartResponse response = primaryYahooClient.get()
+            return primaryYahooClient.get()
                     .uri("/v8/finance/chart/{ticker}?range=1y&interval=1d", ticker)
                     .retrieve()
                     .body(YahooChartResponse.class);
-            return response;
         } catch (RestClientResponseException ex) {
             if (ex.getStatusCode().value() != 429) {
-                throw ex;
+                logger.warn("Yahoo Finance primary returned {} for ticker={}", ex.getStatusCode(), ticker);
+                return null;
             }
 
-            logger.warn("HistoricalReturnService: query1 returned 429 for ticker={}, retrying with query2", ticker);
-            YahooChartResponse response = secondaryYahooClient.get()
-                    .uri("/v8/finance/chart/{ticker}?range=1y&interval=1d", ticker)
-                    .retrieve()
-                    .body(YahooChartResponse.class);
-            return response;
+            logger.warn("Yahoo Finance primary returned 429 for ticker={}, retrying with secondary", ticker);
+
+            try {
+                return secondaryYahooClient.get()
+                        .uri("/v8/finance/chart/{ticker}?range=1y&interval=1d", ticker)
+                        .retrieve()
+                        .body(YahooChartResponse.class);
+            } catch (Exception retryEx) {
+                logger.warn("Yahoo Finance secondary also failed for ticker={}: {}", ticker, retryEx.getMessage());
+                return null;
+            }
         }
     }
 }

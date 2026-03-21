@@ -1,5 +1,7 @@
 package com.goldmansachs.els.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -11,6 +13,8 @@ import java.util.Map;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(InvalidInputException.class)
     public ResponseEntity<Map<String, String>> handleInvalidInput(InvalidInputException ex) {
@@ -40,6 +44,26 @@ public class GlobalExceptionHandler {
                 .body(Map.of(
                         "error", "TICKER_NOT_FOUND",
                         "message", ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(ExternalApiException.class)
+    public ResponseEntity<Map<String, String>> handleExternalApi(ExternalApiException ex) {
+        logger.warn("External API failure: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(Map.of(
+                        "error", "EXTERNAL_API_ERROR",
+                        "message", ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnexpected(Exception ex) {
+        logger.error("Unexpected error", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "error", "INTERNAL_ERROR",
+                        "message", "An unexpected error occurred."
                 ));
     }
 }

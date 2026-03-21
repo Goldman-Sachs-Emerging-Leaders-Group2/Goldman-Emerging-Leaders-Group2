@@ -1,5 +1,6 @@
 package com.goldmansachs.els.service;
 
+import com.goldmansachs.els.exception.ExternalApiException;
 import com.goldmansachs.els.model.CalculationResult;
 import com.goldmansachs.els.model.MutualFund;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,11 @@ public class CalculationService {
         double capmReturn = RISK_FREE_RATE + beta * (expectedMarketReturn - RISK_FREE_RATE);
         // Future value: principal * e^(rate * years)
         double futureValue = investment * Math.exp(capmReturn * years);
+
+        if (!Double.isFinite(capmReturn) || !Double.isFinite(futureValue)) {
+            throw new ExternalApiException(
+                    "Calculation produced invalid results for " + ticker + ". Please try again.");
+        }
 
         return new CalculationResult(
                 fund.ticker(),

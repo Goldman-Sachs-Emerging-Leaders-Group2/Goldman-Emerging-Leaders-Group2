@@ -30,6 +30,7 @@ public class MutualFundController {
         return mutualFundService.getAllFunds();
     }
 
+    // Consider POST if parameters grow or include sensitive data
     @GetMapping({"/calculate", "/investment/future-value"})
     public CalculationResult calculate(
             @RequestParam String ticker,
