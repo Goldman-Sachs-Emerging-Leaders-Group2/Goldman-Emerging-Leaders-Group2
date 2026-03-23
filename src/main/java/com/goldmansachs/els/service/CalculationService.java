@@ -26,7 +26,8 @@ public class CalculationService {
     }
 
     public CalculationResult calculate(String ticker, double investment, int years) {
-        MutualFund fund = mutualFundService.getFundByTicker(ticker);
+        MutualFund fund = mutualFundService.findFundByTicker(ticker)
+                .orElse(new MutualFund(ticker.toUpperCase(), ticker.toUpperCase(), 0.0));
         double beta = betaService.getBeta(ticker);
 
         double expectedMarketReturn = historicalReturnService

@@ -5,6 +5,7 @@ import com.goldmansachs.els.model.CalculationResult;
 import com.goldmansachs.els.model.MutualFund;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
 import java.util.OptionalDouble;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,7 +23,7 @@ class CalculationServiceTest {
     private final MutualFund fund = new MutualFund("VFIAX", "Vanguard 500 Index Fund", 0.1553);
 
     private void setupMocks(double beta, OptionalDouble historicalReturn) {
-        when(mutualFundService.getFundByTicker("VFIAX")).thenReturn(fund);
+        when(mutualFundService.findFundByTicker("VFIAX")).thenReturn(Optional.of(fund));
         when(betaService.getBeta("VFIAX")).thenReturn(beta);
         when(historicalReturnService.getLastYearExpectedReturn("VFIAX")).thenReturn(historicalReturn);
     }
@@ -96,7 +97,7 @@ class CalculationServiceTest {
 
     @Test
     void calculate_propagatesExternalApiException_fromBetaService() {
-        when(mutualFundService.getFundByTicker("VFIAX")).thenReturn(fund);
+        when(mutualFundService.findFundByTicker("VFIAX")).thenReturn(Optional.of(fund));
         when(betaService.getBeta("VFIAX")).thenThrow(new ExternalApiException("API down"));
 
         ExternalApiException thrown = assertThrows(ExternalApiException.class,

@@ -32,7 +32,7 @@ class MutualFundControllerTest {
 
     private final CalculationResult sampleResult = new CalculationResult(
             "VFIAX", "Vanguard 500 Index Fund", 10_000, 10,
-            1.1, 0.0425, 0.1553, 0.16658, 52_345.67
+            1.1, 0.0425, 0.1420, 0.15248, 46_012.34
     );
 
     // --- Response shape tests ---
@@ -40,8 +40,8 @@ class MutualFundControllerTest {
     @Test
     void getAllFunds_returnsJsonArray() throws Exception {
         when(mutualFundService.getAllFunds()).thenReturn(List.of(
-                new MutualFund("VFIAX", "Vanguard 500 Index Fund", 0.1553),
-                new MutualFund("FXAIX", "Fidelity 500 Index Fund", 0.1556)
+                new MutualFund("VFIAX", "Vanguard 500 Index Fund", 0.1420),
+                new MutualFund("FXAIX", "Fidelity 500 Index Fund", 0.1420)
         ));
 
         mockMvc.perform(get("/api/mutualfunds"))
@@ -49,7 +49,7 @@ class MutualFundControllerTest {
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].ticker").value("VFIAX"))
                 .andExpect(jsonPath("$[0].name").value("Vanguard 500 Index Fund"))
-                .andExpect(jsonPath("$[0].expectedAnnualReturn").value(0.1553));
+                .andExpect(jsonPath("$[0].expectedAnnualReturn").value(0.1420));
     }
 
     @Test
@@ -68,9 +68,9 @@ class MutualFundControllerTest {
                 .andExpect(jsonPath("$.years").value(10))
                 .andExpect(jsonPath("$.beta").value(1.1))
                 .andExpect(jsonPath("$.riskFreeRate").value(0.0425))
-                .andExpect(jsonPath("$.expectedMarketReturn").value(0.1553))
-                .andExpect(jsonPath("$.capmReturn").value(0.16658))
-                .andExpect(jsonPath("$.futureValue").value(52_345.67));
+                .andExpect(jsonPath("$.expectedMarketReturn").value(0.1420))
+                .andExpect(jsonPath("$.capmReturn").value(0.15248))
+                .andExpect(jsonPath("$.futureValue").value(46_012.34));
     }
 
     // --- Validation tests ---

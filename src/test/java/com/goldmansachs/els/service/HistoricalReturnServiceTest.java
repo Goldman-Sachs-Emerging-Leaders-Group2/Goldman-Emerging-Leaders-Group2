@@ -86,14 +86,22 @@ class HistoricalReturnServiceTest {
     }
 
     @Test
-    void getLastYearExpectedReturn_returnsEmpty_onNon429HttpError() {
+    void getLastYearExpectedReturn_retriesSecondaryOnNon429Error() {
+        // Primary returns 403
         mockServer.expect(requestTo(org.hamcrest.Matchers.containsString("query1.finance.yahoo.com")))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withStatus(HttpStatus.FORBIDDEN));
 
+        // Secondary returns valid data
+        mockServer.expect(requestTo(org.hamcrest.Matchers.containsString("query2.finance.yahoo.com")))
+                .andExpect(method(HttpMethod.GET))
+                .andRespond(withSuccess(VALID_YAHOO_RESPONSE, MediaType.APPLICATION_JSON));
+
         OptionalDouble result = service.getLastYearExpectedReturn("VFIAX");
 
-        assertTrue(result.isEmpty());
+        assertTrue(result.isPresent());
+        assertEquals(0.15, result.getAsDouble(), 1e-9);
+        mockServer.verify();
     }
 
     @Test

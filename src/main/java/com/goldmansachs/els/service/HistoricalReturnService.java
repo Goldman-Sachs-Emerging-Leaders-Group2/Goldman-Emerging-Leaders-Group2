@@ -92,12 +92,7 @@ public class HistoricalReturnService {
                     .retrieve()
                     .body(YahooChartResponse.class);
         } catch (RestClientResponseException ex) {
-            if (ex.getStatusCode().value() != 429) {
-                logger.warn("Yahoo Finance primary returned {} for ticker={}", ex.getStatusCode(), ticker);
-                return null;
-            }
-
-            logger.warn("Yahoo Finance primary returned 429 for ticker={}, retrying with secondary", ticker);
+            logger.warn("Yahoo Finance primary returned {} for ticker={}, trying secondary", ex.getStatusCode(), ticker);
 
             try {
                 return secondaryYahooClient.get()
