@@ -105,7 +105,6 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
             axisLine={{ stroke: 'var(--card-border, #E5E7EB)' }}
             tickLine={{ stroke: 'var(--card-border, #E5E7EB)' }}
             width={65}
-            label={{ value: 'Projected Value ($)', angle: -90, position: 'insideLeft', offset: 10, fill: 'var(--text-muted, #8896A6)', fontSize: 11 }}
           />
           <Tooltip
             content={<EnhancedTooltip initialInvestment={initialInvestment} isSingle={!isMulti} />}
@@ -126,7 +125,7 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
             fill="none"
             dot={false}
             activeDot={false}
-            name="Your Contributions"
+            name="Contributed"
             isAnimationActive={true}
             animationDuration={1200}
             animationBegin={300}
@@ -137,7 +136,7 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
               stroke="var(--text-muted, #8896A6)"
               strokeDasharray="4 4"
               strokeWidth={1}
-              label={{ value: '2× investment', position: 'insideTopRight', fill: 'var(--text-muted, #8896A6)', fontSize: 11, dy: -8 }}
+              label={{ value: '2×', position: 'insideTopRight', fill: 'var(--text-muted, #8896A6)', fontSize: 10, dy: -6 }}
             />
           )}
           {goalValue > 0 && (
