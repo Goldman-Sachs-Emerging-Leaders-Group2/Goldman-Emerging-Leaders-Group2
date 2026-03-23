@@ -26,31 +26,25 @@ describe('generateInsights', () => {
     expect(summary).toContain('Vanguard 500 Index Fund')
   })
 
-  it('beta > 1 produces caution volatility insight', () => {
-    const { insights } = generateInsights({ ...baseResult, beta: 1.3 })
-    const vol = insights.find((i) => i.label === 'Volatility')
-    expect(vol.type).toBe('caution')
-    expect(vol.text).toContain('Higher volatility')
+  it('produces time to double insight', () => {
+    const { insights } = generateInsights(baseResult)
+    const ttd = insights.find((i) => i.label === 'Time to Double')
+    expect(ttd).toBeDefined()
+    expect(ttd.type).toBe('positive')
+    expect(ttd.text).toContain('doubles')
   })
 
-  it('beta < 1 produces positive volatility insight', () => {
-    const { insights } = generateInsights({ ...baseResult, beta: 0.7 })
-    const vol = insights.find((i) => i.label === 'Volatility')
-    expect(vol.type).toBe('positive')
-    expect(vol.text).toContain('Lower volatility')
+  it('produces after inflation insight', () => {
+    const { insights } = generateInsights(baseResult)
+    const inf = insights.find((i) => i.label === 'After Inflation')
+    expect(inf).toBeDefined()
+    expect(inf.text).toContain('inflation')
   })
 
-  it('beta near 1 produces neutral volatility insight', () => {
-    const { insights } = generateInsights({ ...baseResult, beta: 1.02 })
-    const vol = insights.find((i) => i.label === 'Volatility')
-    expect(vol.type).toBe('neutral')
-  })
-
-  it('high capmReturn produces strong growth insight', () => {
-    const { insights } = generateInsights({ ...baseResult, capmReturn: 0.15 })
-    const growth = insights.find((i) => i.label === 'Growth')
-    expect(growth.type).toBe('positive')
-    expect(growth.text).toContain('Strong')
+  it('caution when return may not beat inflation', () => {
+    const { insights } = generateInsights({ ...baseResult, capmReturn: 0.02 })
+    const inf = insights.find((i) => i.label === 'After Inflation')
+    expect(inf.type).toBe('caution')
   })
 
   it('capmReturn > expectedMarketReturn produces positive vs Market', () => {
@@ -69,6 +63,18 @@ describe('generateInsights', () => {
     const { insights } = generateInsights({ ...baseResult, futureValue: 35000, initialInvestment: 10000 })
     const ret = insights.find((i) => i.label === 'Return')
     expect(ret.type).toBe('positive')
+  })
+
+  it('handles zero capmReturn gracefully', () => {
+    const { insights } = generateInsights({ ...baseResult, capmReturn: 0 })
+    const ttd = insights.find((i) => i.label === 'Time to Double')
+    expect(ttd).toBeUndefined() // can't double with 0% return
+  })
+
+  it('handles negative capmReturn gracefully', () => {
+    const { insights } = generateInsights({ ...baseResult, capmReturn: -0.05 })
+    const inf = insights.find((i) => i.label === 'After Inflation')
+    expect(inf.type).toBe('caution')
   })
 })
 

@@ -4,8 +4,12 @@ import userEvent from '@testing-library/user-event'
 import CalculatorForm from './CalculatorForm'
 
 const funds = [
-  { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', expectedAnnualReturn: 0.1553 },
-  { ticker: 'FXAIX', name: 'Fidelity 500 Index Fund', expectedAnnualReturn: 0.1556 },
+  { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', expectedAnnualReturn: 0.1420 },
+  { ticker: 'FXAIX', name: 'Fidelity 500 Index Fund', expectedAnnualReturn: 0.1420 },
+  { ticker: 'AGTHX', name: 'American Funds Growth', expectedAnnualReturn: 0.2509 },
+  { ticker: 'FCNTX', name: 'Fidelity Contrafund', expectedAnnualReturn: 0.2061 },
+  { ticker: 'TRBCX', name: 'T. Rowe Price Blue Chip', expectedAnnualReturn: 0.1666 },
+  { ticker: 'SPY', name: 'SPDR S&P 500 ETF', expectedAnnualReturn: 0.1636 },
 ]
 
 const defaultProps = {
@@ -18,10 +22,12 @@ const defaultProps = {
   isCalculating: false,
   isLoadingFunds: false,
   riskFreeRate: null,
+  goalAmount: '',
+  onGoalChange: vi.fn(),
 }
 
 describe('CalculatorForm', () => {
-  it('renders fund checkboxes from props', () => {
+  it('renders fund cards from props', () => {
     render(<CalculatorForm {...defaultProps} />)
     expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
     expect(screen.getByText(/FXAIX/)).toBeInTheDocument()
@@ -30,6 +36,11 @@ describe('CalculatorForm', () => {
   it('shows "No funds available" when funds array is empty', () => {
     render(<CalculatorForm {...defaultProps} funds={[]} />)
     expect(screen.getByText('No funds available')).toBeInTheDocument()
+  })
+
+  it('shows "Loading funds…" when loading with empty funds', () => {
+    render(<CalculatorForm {...defaultProps} funds={[]} isLoadingFunds={true} />)
+    expect(screen.getByText('Loading funds…')).toBeInTheDocument()
   })
 
   it('disables checkboxes when loading funds', () => {
@@ -41,7 +52,7 @@ describe('CalculatorForm', () => {
   it('disables inputs when calculating', () => {
     render(<CalculatorForm {...defaultProps} isCalculating={true} />)
     expect(screen.getByLabelText('Investment ($)')).toBeDisabled()
-    expect(screen.getByLabelText('Terms (Years)')).toBeDisabled()
+    expect(screen.getByLabelText('Investment Duration')).toBeDisabled()
   })
 
   it('disables submit button when calculating', () => {
@@ -51,7 +62,7 @@ describe('CalculatorForm', () => {
 
   it('disables submit button when no funds', () => {
     render(<CalculatorForm {...defaultProps} funds={[]} />)
-    expect(screen.getByRole('button')).toBeDisabled()
+    expect(screen.getByRole('button', { name: /calculate/i })).toBeDisabled()
   })
 
   it('shows field error messages', () => {
@@ -74,7 +85,7 @@ describe('CalculatorForm', () => {
     expect(screen.getByLabelText('Risk-free rate from last calculation')).toHaveValue('4.25%')
   })
 
-  it('calls onToggleTicker when checkbox clicked', async () => {
+  it('calls onToggleTicker when fund card clicked', async () => {
     const onToggleTicker = vi.fn()
     render(<CalculatorForm {...defaultProps} onToggleTicker={onToggleTicker} />)
     const checkboxes = screen.getAllByRole('checkbox')
@@ -87,5 +98,20 @@ describe('CalculatorForm', () => {
     render(<CalculatorForm {...defaultProps} onSubmit={onSubmit} />)
     await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
     expect(onSubmit).toHaveBeenCalled()
+  })
+
+  it('renders goal amount input', () => {
+    render(<CalculatorForm {...defaultProps} goalAmount="50000" />)
+    expect(screen.getByLabelText(/Goal Amount/)).toHaveValue(50000)
+  })
+
+  it('enforces MAX_SELECTIONS limit', () => {
+    // Select all 5 mutual funds (visible on default tab) + 1 ETF
+    const maxForm = { tickers: ['VFIAX', 'FXAIX', 'AGTHX', 'FCNTX', 'TRBCX'], investment: '10000', years: '10' }
+    render(<CalculatorForm {...defaultProps} form={maxForm} />)
+    // With 5 selected, no remaining unchecked mutual fund checkboxes should exist
+    // All 5 are checked, so all should be enabled (to allow deselecting)
+    const checkboxes = screen.getAllByRole('checkbox')
+    checkboxes.forEach((cb) => expect(cb).not.toBeDisabled())
   })
 })

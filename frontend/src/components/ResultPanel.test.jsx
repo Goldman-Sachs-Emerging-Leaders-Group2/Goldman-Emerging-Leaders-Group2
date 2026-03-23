@@ -52,4 +52,19 @@ describe('ResultPanel', () => {
     render(<ResultPanel results={{ VFIAX: { ...sampleResult, fundName: '' } }} isCalculating={false} />)
     expect(screen.getByText('Unknown Fund')).toBeInTheDocument()
   })
+
+  it('shows Moderate risk label for beta 0.8-1.2', () => {
+    render(<ResultPanel results={{ VFIAX: { ...sampleResult, beta: 1.0 } }} isCalculating={false} />)
+    expect(screen.getByText(/1\.00 · Moderate/)).toBeInTheDocument()
+  })
+
+  it('shows Conservative risk label for beta < 0.8', () => {
+    render(<ResultPanel results={{ VFIAX: { ...sampleResult, beta: 0.5 } }} isCalculating={false} />)
+    expect(screen.getByText(/0\.50 · Conservative/)).toBeInTheDocument()
+  })
+
+  it('shows Aggressive risk label for beta > 1.2', () => {
+    render(<ResultPanel results={{ VFIAX: { ...sampleResult, beta: 1.5 } }} isCalculating={false} />)
+    expect(screen.getByText(/1\.50 · Aggressive/)).toBeInTheDocument()
+  })
 })

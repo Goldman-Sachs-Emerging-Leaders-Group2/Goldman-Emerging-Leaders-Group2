@@ -1,44 +1,55 @@
 import { formatCurrency, formatDecimal, formatPercent } from './formatters'
 
+const INFLATION_RATE = 0.03
+
 export const generateInsights = (result) => {
   const { beta, capmReturn, futureValue, initialInvestment, expectedMarketReturn, fundName, years } = result
   const insights = []
 
-  // Volatility
-  if (Math.abs(beta - 1) <= 0.05) {
-    insights.push({ type: 'neutral', label: 'Volatility', text: 'Moves roughly in line with the market' })
-  } else if (beta < 1) {
-    insights.push({ type: 'positive', label: 'Volatility', text: 'Lower volatility than the overall market' })
-  } else {
-    insights.push({ type: 'caution', label: 'Volatility', text: 'Higher volatility than the overall market' })
+  // Time to Double
+  if (capmReturn > 0) {
+    const timeToDouble = (72 / (capmReturn * 100)).toFixed(1)
+    insights.push({
+      type: 'positive',
+      label: 'Time to Double',
+      text: `Your money doubles roughly every ${timeToDouble} years at this rate`,
+    })
   }
 
-  // Growth
-  if (capmReturn > 0.12) {
-    insights.push({ type: 'positive', label: 'Growth', text: 'Strong expected annual growth' })
-  } else if (capmReturn > 0.05) {
-    insights.push({ type: 'neutral', label: 'Growth', text: 'Moderate expected annual growth' })
+  // Inflation Reality
+  const realReturn = capmReturn - INFLATION_RATE
+  if (realReturn > 0) {
+    insights.push({
+      type: realReturn > 0.02 ? 'positive' : 'neutral',
+      label: 'After Inflation',
+      text: `Your real annual return is ~${formatPercent(realReturn)} after accounting for ~3% inflation`,
+    })
   } else {
-    insights.push({ type: 'caution', label: 'Growth', text: 'Conservative expected growth' })
+    insights.push({
+      type: 'caution',
+      label: 'After Inflation',
+      text: `This return may not keep up with inflation (~3% annually)`,
+    })
   }
 
   // Return multiple
   const multiple = futureValue / initialInvestment
   if (multiple >= 3) {
-    insights.push({ type: 'positive', label: 'Return', text: 'Investment projected to triple or more' })
+    insights.push({ type: 'positive', label: 'Return', text: `Investment projected to grow ${multiple.toFixed(1)}x` })
   } else if (multiple >= 2) {
-    insights.push({ type: 'neutral', label: 'Return', text: 'Investment projected to double or more' })
+    insights.push({ type: 'positive', label: 'Return', text: `Investment projected to grow ${multiple.toFixed(1)}x — more than doubles` })
+  } else if (multiple >= 1.5) {
+    insights.push({ type: 'neutral', label: 'Return', text: `Investment projected to grow ${multiple.toFixed(1)}x` })
   }
 
   // vs Market
   if (capmReturn > expectedMarketReturn) {
-    insights.push({ type: 'positive', label: 'vs Market', text: 'CAPM return exceeds market average' })
+    insights.push({ type: 'positive', label: 'vs Market', text: 'CAPM return exceeds the fund\'s historical average' })
   } else if (capmReturn < expectedMarketReturn) {
-    insights.push({ type: 'caution', label: 'vs Market', text: 'CAPM return below market average' })
+    insights.push({ type: 'caution', label: 'vs Market', text: 'CAPM return is below the fund\'s historical average' })
   }
 
-  // Summary
-  const summary = `Based on CAPM, ${fundName} with a beta of ${formatDecimal(beta, 2)} is projected to grow your ${formatCurrency(initialInvestment)} to ${formatCurrency(futureValue)} over ${years} years at ${formatPercent(capmReturn)} annually.`
+  const summary = `Based on CAPM, ${fundName} is projected to grow your ${formatCurrency(initialInvestment)} to ${formatCurrency(futureValue)} over ${years} years at ${formatPercent(capmReturn)} annually.`
 
   return { summary, insights }
 }
@@ -63,7 +74,7 @@ export const generateComparisonInsights = (results) => {
     text: `${lowestBeta[1].fundName} has the lowest beta (${formatDecimal(lowestBeta[1].beta, 2)}) — least volatile`,
   })
 
-  // Highest return
+  // Best return
   const highestReturn = entries.reduce((a, b) => (b[1].capmReturn > a[1].capmReturn ? b : a))
   insights.push({
     type: 'positive',

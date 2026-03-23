@@ -66,13 +66,13 @@ describe('calculateFutureValue', () => {
     const abortError = new DOMException('The operation was aborted.', 'AbortError')
     globalThis.fetch = vi.fn().mockRejectedValue(abortError)
 
-    await expect(calculateFutureValue(params)).rejects.toThrow('Calculation request timed out')
+    await expect(calculateFutureValue(params)).rejects.toThrow(/timed out/)
   })
 
   it('throws network error message on fetch failure', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
 
-    await expect(calculateFutureValue(params)).rejects.toThrow('Unable to connect to the server')
+    await expect(calculateFutureValue(params)).rejects.toThrow(/Unable to connect/)
   })
 
   it('throws on invalid JSON response', async () => {

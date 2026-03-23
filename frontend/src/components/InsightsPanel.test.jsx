@@ -27,8 +27,8 @@ describe('InsightsPanel', () => {
   it('renders single-fund insights with one result', () => {
     render(<InsightsPanel results={{ VFIAX: sampleResult }} isCalculating={false} />)
     expect(screen.getByText(/Based on CAPM/)).toBeInTheDocument()
-    expect(screen.getByText('Volatility')).toBeInTheDocument()
-    expect(screen.getByText('Growth')).toBeInTheDocument()
+    expect(screen.getByText('Time to Double')).toBeInTheDocument()
+    expect(screen.getByText('After Inflation')).toBeInTheDocument()
   })
 
   it('renders comparison insights with multiple results', () => {

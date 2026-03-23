@@ -88,7 +88,7 @@ describe('App', () => {
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByText('No mutual funds are currently available.')).toBeInTheDocument()
+      expect(screen.getByText('No funds available')).toBeInTheDocument()
     })
   })
 
@@ -140,7 +140,7 @@ describe('App', () => {
     await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Vanguard 500 Index Fund')).toBeInTheDocument()
+      expect(screen.getAllByText('Vanguard 500 Index Fund').length).toBeGreaterThanOrEqual(1)
     })
 
     expect(screen.getAllByText('$52,345.67').length).toBeGreaterThanOrEqual(1)

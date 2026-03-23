@@ -21,6 +21,9 @@ const ComparisonTable = ({ results }) => {
     }, tickers[0])
   }
 
+  const bestGrowth = getBestTicker('futureValue', 'max')
+  const safest = getBestTicker('beta', 'min')
+
   return (
     <div className="comparison-table-wrapper">
       <table className="comparison-table">
@@ -53,6 +56,24 @@ const ComparisonTable = ({ results }) => {
             )
           })}
         </tbody>
+        <tfoot>
+          <tr className="comparison-verdict">
+            <td className="comparison-metric-label">Verdict</td>
+            {tickers.map((ticker) => (
+              <td key={ticker} className="comparison-verdict-cell">
+                {ticker === bestGrowth && ticker === safest && (
+                  <span className="verdict-tag verdict-tag--best">Best Overall</span>
+                )}
+                {ticker === bestGrowth && ticker !== safest && (
+                  <span className="verdict-tag verdict-tag--growth">Best Growth</span>
+                )}
+                {ticker === safest && ticker !== bestGrowth && (
+                  <span className="verdict-tag verdict-tag--safe">Safest</span>
+                )}
+              </td>
+            ))}
+          </tr>
+        </tfoot>
       </table>
     </div>
   )

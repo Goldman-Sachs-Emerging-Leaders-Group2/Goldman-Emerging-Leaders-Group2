@@ -3,55 +3,85 @@ import {
   formatDecimal,
   formatPercent,
 } from '../utils/formatters'
+import { useCountUp } from '../hooks/useCountUp'
 import ComparisonTable from './ComparisonTable'
 
-const SingleResult = ({ result }) => (
-  <div className="result-content" aria-live="polite">
-    <p className="result-fund-name">{result.fundName || 'Unknown Fund'}</p>
+const HELP_TEXT = {
+  capm: 'The expected annual return predicted by the Capital Asset Pricing Model',
+  market: "The fund's historical average annual return",
+  riskFree: 'The return on a risk-free investment (US Treasury rate)',
+  beta: 'How volatile this fund is compared to the S&P 500. Beta > 1 means more volatile.',
+}
 
-    <div className="result-hero-card">
-      <span className="result-hero-label">Future Value</span>
-      <div className="result-hero-value">{formatCurrency(result.futureValue)}</div>
-      <p className="result-hero-context">
-        {formatCurrency(result.initialInvestment)} invested over {result.years ?? '—'} years
-      </p>
-    </div>
-
-    <div className="result-breakdown">
-      <div className="breakdown-row">
-        <div className="breakdown-label-group">
-          <div className="breakdown-dot blue" />
-          <span className="breakdown-label">CAPM Return</span>
-        </div>
-        <span className="breakdown-value">{formatPercent(result.capmReturn)}</span>
-      </div>
-
-      <div className="breakdown-row">
-        <div className="breakdown-label-group">
-          <div className="breakdown-dot green" />
-          <span className="breakdown-label">Expected Market Return</span>
-        </div>
-        <span className="breakdown-value">{formatPercent(result.expectedMarketReturn)}</span>
-      </div>
-
-      <div className="breakdown-row">
-        <div className="breakdown-label-group">
-          <div className="breakdown-dot amber" />
-          <span className="breakdown-label">Risk-Free Rate</span>
-        </div>
-        <span className="breakdown-value">{formatPercent(result.riskFreeRate)}</span>
-      </div>
-
-      <div className="breakdown-row">
-        <div className="breakdown-label-group">
-          <div className="breakdown-dot purple" />
-          <span className="breakdown-label">Beta</span>
-        </div>
-        <span className="breakdown-value">{formatDecimal(result.beta, 2)}</span>
-      </div>
-    </div>
-  </div>
+const HelpIcon = ({ text }) => (
+  <span className="help-icon" title={text}>?</span>
 )
+
+const SingleResult = ({ result }) => {
+  const animatedValue = useCountUp(result.futureValue)
+
+  return (
+    <div className="result-content" aria-live="polite">
+      <p className="result-fund-name">{result.fundName || 'Unknown Fund'}</p>
+
+      <div className="result-hero-card">
+        <span className="result-hero-label">Future Value</span>
+        <div className="result-hero-value">{formatCurrency(animatedValue)}</div>
+        <p className="result-hero-context">
+          {formatCurrency(result.initialInvestment)} invested over {result.years ?? '—'} years
+        </p>
+      </div>
+
+      <div className="result-breakdown">
+        <div className="breakdown-row">
+          <div className="breakdown-label-group">
+            <div className="breakdown-dot blue" />
+            <span className="breakdown-label">CAPM Return</span>
+            <HelpIcon text={HELP_TEXT.capm} />
+          </div>
+          <span className="breakdown-value">{formatPercent(result.capmReturn)}</span>
+        </div>
+
+        <div className="breakdown-row">
+          <div className="breakdown-label-group">
+            <div className="breakdown-dot green" />
+            <span className="breakdown-label">Expected Market Return</span>
+            <HelpIcon text={HELP_TEXT.market} />
+          </div>
+          <span className="breakdown-value">{formatPercent(result.expectedMarketReturn)}</span>
+        </div>
+
+        <div className="breakdown-row">
+          <div className="breakdown-label-group">
+            <div className="breakdown-dot amber" />
+            <span className="breakdown-label">Risk-Free Rate</span>
+            <HelpIcon text={HELP_TEXT.riskFree} />
+          </div>
+          <span className="breakdown-value">{formatPercent(result.riskFreeRate)}</span>
+        </div>
+
+        <div className="breakdown-row">
+          <div className="breakdown-label-group">
+            <div className="breakdown-dot purple" />
+            <span className="breakdown-label">Beta</span>
+            <HelpIcon text={HELP_TEXT.beta} />
+          </div>
+          <div className="risk-meter-group">
+            <div className="risk-meter">
+              <div
+                className={`risk-meter__fill ${result.beta < 0.8 ? 'risk-low' : result.beta <= 1.2 ? 'risk-moderate' : 'risk-high'}`}
+                style={{ width: `${Math.min((result.beta / 2) * 100, 100)}%` }}
+              />
+            </div>
+            <span className="breakdown-value">
+              {formatDecimal(result.beta, 2)} · {result.beta < 0.8 ? 'Conservative' : result.beta <= 1.2 ? 'Moderate' : 'Aggressive'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const ResultPanel = ({ results, isCalculating }) => {
   const tickers = Object.keys(results)

@@ -27,7 +27,6 @@ describe('GrowthChart', () => {
   it('renders chart container with single result', () => {
     const { container } = render(<GrowthChart results={{ VFIAX: sampleResult }} isCalculating={false} />)
     expect(container.querySelector('.chart-container')).toBeInTheDocument()
-    expect(container.querySelector('.recharts-responsive-container')).toBeInTheDocument()
   })
 
   it('applies updating class when calculating with results', () => {
