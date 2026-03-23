@@ -149,7 +149,7 @@ Goldman-Emerging-Leaders-Group2/
 
 ```
 CAPM Return = Risk-Free Rate + Beta × (Expected Market Return − Risk-Free Rate)
-Future Value = Investment × (1 + CAPM Return) ^ Years
+Future Value = Investment × e^(CAPM Return × Years)    [continuous compounding]
 ```
 
 - **Risk-free rate:** 4.25% (hardcoded)
