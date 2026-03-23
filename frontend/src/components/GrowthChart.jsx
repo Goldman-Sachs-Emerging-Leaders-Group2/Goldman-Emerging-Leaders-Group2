@@ -116,14 +116,20 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
               wrapperStyle={{ color: 'var(--text-secondary, #4A5568)', fontSize: 12, paddingTop: 8 }}
             />
           )}
-          {/* Initial investment baseline */}
-          <ReferenceLine
-            y={initialInvestment}
+          {/* Total contributed line (your money, no growth) */}
+          <Area
+            type="monotone"
+            dataKey="contributed"
             stroke="var(--text-muted, #8896A6)"
-            strokeDasharray="8 4"
             strokeWidth={1}
-            strokeOpacity={0.5}
-            label={{ value: 'Initial', position: 'insideTopLeft', fill: 'var(--text-muted, #8896A6)', fontSize: 10 }}
+            strokeDasharray="6 4"
+            fill="none"
+            dot={false}
+            activeDot={false}
+            name="Your Contributions"
+            isAnimationActive={true}
+            animationDuration={1200}
+            animationBegin={300}
           />
           {showDouble && (
             <ReferenceLine

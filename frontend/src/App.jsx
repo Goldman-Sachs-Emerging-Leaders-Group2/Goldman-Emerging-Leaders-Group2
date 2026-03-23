@@ -9,7 +9,7 @@ import { calculateMultipleFunds, getMutualFunds } from './api/client'
 import { formatCurrency, formatPercent } from './utils/formatters'
 import { generateNarrative, generateComparisonNarrative } from './utils/narrative'
 
-const REQUIRED_FIELDS = ['ticker', 'futureValue', 'capmReturn', 'expectedMarketReturn', 'beta', 'fundName', 'years', 'initialInvestment', 'riskFreeRate']
+const REQUIRED_FIELDS = ['ticker', 'futureValue', 'capmReturn', 'expectedMarketReturn', 'beta', 'fundName', 'years', 'initialInvestment', 'riskFreeRate', 'totalContributed']
 
 const smoothScrollTo = (element, duration = 1200) => {
   if (!element) return
@@ -44,6 +44,8 @@ function App() {
   const [loadError, setLoadError] = useState('')
   const [calculationError, setCalculationError] = useState('')
   const [goalAmount, setGoalAmount] = useState('')
+  const [monthlyContribution, setMonthlyContribution] = useState('0')
+  const [riskTolerance, setRiskTolerance] = useState(5)
   const [theme, setTheme] = useState(() => localStorage.getItem('gs-theme') || 'light')
   const [formCollapsed, setFormCollapsed] = useState(false)
   const [customTickers, setCustomTickers] = useState([])
@@ -181,6 +183,7 @@ function App() {
         tickers: form.tickers,
         investment: Number(form.investment),
         years: Number(form.years),
+        monthlyContribution: Number(monthlyContribution) || 0,
       })
 
       for (const [ticker, response] of Object.entries(newResults)) {
@@ -247,9 +250,9 @@ function App() {
   // Results narrative
   const narrative = useMemo(() => {
     if (!hasResults) return null
-    if (isMulti) return generateComparisonNarrative(results)
-    return generateNarrative(primaryResult)
-  }, [results, hasResults, isMulti, primaryResult])
+    if (isMulti) return generateComparisonNarrative(results, goalAmount)
+    return generateNarrative(primaryResult, goalAmount)
+  }, [results, hasResults, isMulti, primaryResult, goalAmount])
 
   return (
     <div className="app">
@@ -354,12 +357,15 @@ function App() {
               onSubmit={handleSubmit}
               isCalculating={isCalculating}
               isLoadingFunds={isLoadingFunds}
-              riskFreeRate={riskFreeRate}
               goalAmount={goalAmount}
               onGoalChange={(e) => {
                 const val = e.target.value
                 setGoalAmount(val === '' ? '' : String(Math.max(0, Number(val) || 0)))
               }}
+              monthlyContribution={monthlyContribution}
+              onMonthlyChange={(e) => setMonthlyContribution(e.target.value)}
+              riskTolerance={riskTolerance}
+              onRiskToleranceChange={(e) => setRiskTolerance(Number(e.target.value))}
               customTickers={customTickers}
               onAddCustomTicker={handleAddCustomTicker}
               onRemoveCustomTicker={handleRemoveCustomTicker}

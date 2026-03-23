@@ -34,8 +34,9 @@ export const generateInsights = (result) => {
     })
   }
 
-  // Return multiple
-  const multiple = initialInvestment > 0 ? futureValue / initialInvestment : 0
+  // Return multiple (based on total contributed, not just initial)
+  const totalIn = result.totalContributed || initialInvestment
+  const multiple = totalIn > 0 ? futureValue / totalIn : 0
   if (multiple >= 3) {
     insights.push({ type: 'positive', label: 'Return', text: `Investment projected to grow ${multiple.toFixed(1)}x` })
   } else if (multiple >= 2) {

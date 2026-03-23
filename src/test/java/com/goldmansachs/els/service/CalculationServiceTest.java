@@ -32,7 +32,7 @@ class CalculationServiceTest {
     void calculate_fallsBackToFundExpectedReturn_whenHistoricalReturnUnavailable() {
         setupMocks(1.1, OptionalDouble.empty());
 
-        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 10);
+        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 10, 0);
 
         assertEquals(fund.expectedAnnualReturn(), result.expectedMarketReturn(), 1e-12);
 
@@ -49,7 +49,7 @@ class CalculationServiceTest {
         double historicalExpectedReturn = 0.12;
         setupMocks(1.1, OptionalDouble.of(historicalExpectedReturn));
 
-        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 10);
+        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 10, 0);
 
         assertEquals(historicalExpectedReturn, result.expectedMarketReturn(), 1e-12);
 
@@ -65,7 +65,7 @@ class CalculationServiceTest {
     void calculate_returnsCorrectResultShape() {
         setupMocks(1.05, OptionalDouble.of(0.15));
 
-        CalculationResult result = calculationService.calculate("VFIAX", 5_000, 5);
+        CalculationResult result = calculationService.calculate("VFIAX", 5_000, 5, 0);
 
         assertEquals("VFIAX", result.ticker());
         assertEquals("Vanguard 500 Index Fund", result.fundName());
@@ -74,6 +74,8 @@ class CalculationServiceTest {
         assertEquals(1.05, result.beta(), 1e-12);
         assertEquals(0.0425, result.riskFreeRate(), 1e-12);
         assertEquals(0.15, result.expectedMarketReturn(), 1e-12);
+        assertEquals(0, result.monthlyContribution(), 1e-12);
+        assertEquals(5_000, result.totalContributed(), 1e-12);
         assertTrue(Double.isFinite(result.capmReturn()));
         assertTrue(Double.isFinite(result.futureValue()));
         assertTrue(result.futureValue() > 0);
@@ -84,7 +86,7 @@ class CalculationServiceTest {
         setupMocks(Double.NaN, OptionalDouble.of(0.12));
 
         assertThrows(ExternalApiException.class,
-                () -> calculationService.calculate("VFIAX", 10_000, 10));
+                () -> calculationService.calculate("VFIAX", 10_000, 10, 0));
     }
 
     @Test
@@ -92,7 +94,7 @@ class CalculationServiceTest {
         setupMocks(Double.POSITIVE_INFINITY, OptionalDouble.of(0.12));
 
         assertThrows(ExternalApiException.class,
-                () -> calculationService.calculate("VFIAX", 10_000, 10));
+                () -> calculationService.calculate("VFIAX", 10_000, 10, 0));
     }
 
     @Test
@@ -101,7 +103,7 @@ class CalculationServiceTest {
         when(betaService.getBeta("VFIAX")).thenThrow(new ExternalApiException("API down"));
 
         ExternalApiException thrown = assertThrows(ExternalApiException.class,
-                () -> calculationService.calculate("VFIAX", 10_000, 10));
+                () -> calculationService.calculate("VFIAX", 10_000, 10, 0));
         assertEquals("API down", thrown.getMessage());
     }
 
@@ -109,8 +111,31 @@ class CalculationServiceTest {
     void calculate_withZeroYears_returnsInvestmentAsIs() {
         setupMocks(1.1, OptionalDouble.of(0.12));
 
-        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 0);
+        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 0, 0);
 
         assertEquals(10_000, result.futureValue(), 1e-9);
+    }
+
+    @Test
+    void calculate_withMonthlyContribution_increasesFutureValue() {
+        setupMocks(1.0, OptionalDouble.of(0.10));
+
+        CalculationResult withoutSIP = calculationService.calculate("VFIAX", 10_000, 10, 0);
+        CalculationResult withSIP = calculationService.calculate("VFIAX", 10_000, 10, 500);
+
+        assertTrue(withSIP.futureValue() > withoutSIP.futureValue(),
+                "SIP should increase future value");
+        assertEquals(500, withSIP.monthlyContribution(), 1e-12);
+        assertEquals(10_000 + 500 * 12 * 10, withSIP.totalContributed(), 1e-9);
+    }
+
+    @Test
+    void calculate_withMonthlyContribution_zeroYears_noAnnuity() {
+        setupMocks(1.0, OptionalDouble.of(0.10));
+
+        CalculationResult result = calculationService.calculate("VFIAX", 10_000, 0, 500);
+
+        assertEquals(10_000, result.futureValue(), 1e-9);
+        assertEquals(10_000, result.totalContributed(), 1e-9);
     }
 }

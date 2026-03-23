@@ -9,6 +9,8 @@ public record CalculationResult(
         double riskFreeRate,
         double expectedMarketReturn,
         double capmReturn,
-        double futureValue
+        double futureValue,
+        double monthlyContribution,
+        double totalContributed
 ) {
 }

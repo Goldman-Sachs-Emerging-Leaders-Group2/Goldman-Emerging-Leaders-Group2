@@ -21,9 +21,12 @@ const defaultProps = {
   onSubmit: vi.fn((e) => e.preventDefault()),
   isCalculating: false,
   isLoadingFunds: false,
-  riskFreeRate: null,
   goalAmount: '',
   onGoalChange: vi.fn(),
+  monthlyContribution: '0',
+  onMonthlyChange: vi.fn(),
+  riskTolerance: 5,
+  onRiskToleranceChange: vi.fn(),
 }
 
 describe('CalculatorForm', () => {
@@ -51,7 +54,7 @@ describe('CalculatorForm', () => {
 
   it('disables inputs when calculating', () => {
     render(<CalculatorForm {...defaultProps} isCalculating={true} />)
-    expect(screen.getByLabelText('Investment ($)')).toBeDisabled()
+    expect(screen.getByLabelText('Initial Investment ($)')).toBeDisabled()
     expect(screen.getByLabelText('Investment Duration')).toBeDisabled()
   })
 
@@ -80,9 +83,15 @@ describe('CalculatorForm', () => {
     expect(screen.getByRole('button', { name: /calculating/i })).toBeInTheDocument()
   })
 
-  it('displays formatted risk-free rate when provided', () => {
-    render(<CalculatorForm {...defaultProps} riskFreeRate={0.0425} />)
-    expect(screen.getByLabelText('Risk-free rate from last calculation')).toHaveValue('4.25%')
+  it('renders monthly contribution input', () => {
+    render(<CalculatorForm {...defaultProps} monthlyContribution="500" />)
+    expect(screen.getByLabelText(/Monthly Contribution/)).toHaveValue(500)
+  })
+
+  it('renders risk tolerance slider', () => {
+    render(<CalculatorForm {...defaultProps} riskTolerance={7} />)
+    expect(screen.getByText(/7\/10/)).toBeInTheDocument()
+    expect(screen.getByText(/Aggressive/)).toBeInTheDocument()
   })
 
   it('calls onToggleTicker when fund card clicked', async () => {

@@ -5,6 +5,9 @@ import { getFundColor } from '../utils/colors'
 const MAX_SELECTIONS = 5
 const ETF_TICKERS = new Set(['SPY', 'QQQ', 'VTI', 'SCHD', 'ARKK'])
 
+const RISK_LABELS = { low: 'Conservative', mid: 'Moderate', high: 'Aggressive' }
+const getRiskLabel = (val) => val <= 3 ? RISK_LABELS.low : val <= 6 ? RISK_LABELS.mid : RISK_LABELS.high
+
 const CalculatorForm = ({
   funds,
   form,
@@ -14,9 +17,12 @@ const CalculatorForm = ({
   onSubmit,
   isCalculating,
   isLoadingFunds,
-  riskFreeRate,
   goalAmount,
   onGoalChange,
+  monthlyContribution,
+  onMonthlyChange,
+  riskTolerance,
+  onRiskToleranceChange,
   customTickers,
   onAddCustomTicker,
   onRemoveCustomTicker,
@@ -106,6 +112,7 @@ const CalculatorForm = ({
             )
           })}
         </div>
+
         {/* Custom ticker chips */}
         {customTickers && customTickers.length > 0 && (
           <div className="custom-chips">
@@ -171,7 +178,7 @@ const CalculatorForm = ({
 
       <div className="form-row">
         <div className="field-group">
-          <label htmlFor="investment">Investment ($)</label>
+          <label htmlFor="investment">Initial Investment ($)</label>
           <input
             id="investment"
             name="investment"
@@ -187,6 +194,24 @@ const CalculatorForm = ({
           {errors.investment && <p className="field-error">{errors.investment}</p>}
         </div>
 
+        <div className="field-group">
+          <label htmlFor="monthlyContribution">Monthly Contribution ($) <span className="field-hint">(optional)</span></label>
+          <input
+            id="monthlyContribution"
+            name="monthlyContribution"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="50"
+            value={monthlyContribution}
+            onChange={onMonthlyChange}
+            placeholder="e.g. 500"
+            disabled={isCalculating}
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
         <div className="field-group">
           <label htmlFor="years">Investment Duration</label>
           <div className="slider-group">
@@ -206,22 +231,9 @@ const CalculatorForm = ({
           </div>
           {errors.years && <p className="field-error">{errors.years}</p>}
         </div>
-      </div>
-
-      <div className="form-row">
-        <div className="field-group">
-          <label>Risk-Free Rate <span className="field-hint">(from server)</span></label>
-          <input
-            type="text"
-            value={riskFreeRate != null ? formatPercent(riskFreeRate) : '—'}
-            readOnly
-            disabled
-            aria-label="Risk-free rate from last calculation"
-          />
-        </div>
 
         <div className="field-group">
-          <label htmlFor="goalAmount">Goal Amount <span className="field-hint">(optional)</span></label>
+          <label htmlFor="goalAmount">Goal Amount ($) <span className="field-hint">(optional)</span></label>
           <input
             id="goalAmount"
             name="goalAmount"
@@ -234,6 +246,25 @@ const CalculatorForm = ({
             placeholder="e.g. 50000"
             disabled={isCalculating}
           />
+        </div>
+      </div>
+
+      <div className="field-group">
+        <label htmlFor="riskTolerance">Risk Tolerance</label>
+        <div className="slider-group">
+          <input
+            id="riskTolerance"
+            name="riskTolerance"
+            type="range"
+            min="1"
+            max="10"
+            step="1"
+            value={riskTolerance}
+            onChange={onRiskToleranceChange}
+            disabled={isCalculating}
+            className="years-slider"
+          />
+          <span className="slider-value">{riskTolerance}/10 · {getRiskLabel(riskTolerance)}</span>
         </div>
       </div>
 

@@ -25,7 +25,7 @@ public class CalculationService {
         this.historicalReturnService = historicalReturnService;
     }
 
-    public CalculationResult calculate(String ticker, double investment, int years) {
+    public CalculationResult calculate(String ticker, double investment, int years, double monthlyContribution) {
         MutualFund fund = mutualFundService.findFundByTicker(ticker)
                 .orElse(new MutualFund(ticker.toUpperCase(), ticker.toUpperCase(), 0.0));
         double beta = betaService.getBeta(ticker);
@@ -35,8 +35,18 @@ public class CalculationService {
             .orElse(fund.expectedAnnualReturn());
         // CAPM: rate = riskFreeRate + beta * (expectedReturn - riskFreeRate)
         double capmReturn = RISK_FREE_RATE + beta * (expectedMarketReturn - RISK_FREE_RATE);
-        // Future value: principal * e^(rate * years)
-        double futureValue = investment * Math.exp(capmReturn * years);
+
+        // Future value: lump sum + annuity (monthly contributions)
+        double lumpSumFV = investment * Math.exp(capmReturn * years);
+        double annuityFV = 0;
+        if (monthlyContribution > 0 && years > 0 && capmReturn != 0) {
+            double monthlyRate = Math.exp(capmReturn / 12.0) - 1;
+            if (monthlyRate > 0) {
+                annuityFV = monthlyContribution * (Math.exp(capmReturn * years) - 1) / monthlyRate;
+            }
+        }
+        double futureValue = lumpSumFV + annuityFV;
+        double totalContributed = investment + monthlyContribution * 12.0 * years;
 
         if (!Double.isFinite(capmReturn) || !Double.isFinite(futureValue)) {
             throw new ExternalApiException(
@@ -52,7 +62,9 @@ public class CalculationService {
                 RISK_FREE_RATE,
                 expectedMarketReturn,
                 capmReturn,
-                futureValue
+                futureValue,
+                monthlyContribution,
+                totalContributed
         );
     }
 }

@@ -26,16 +26,20 @@ export const getMutualFunds = async () => {
   }
 }
 
-export const calculateFutureValue = async ({ ticker, investment, years }) => {
+export const calculateFutureValue = async ({ ticker, investment, years, monthlyContribution = 0 }) => {
   const controller = new AbortController()
   const timeoutMs = 10000
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
-  const queryParams = new URLSearchParams({
+  const params = {
     ticker,
     investment: String(investment),
     years: String(years),
-  })
+  }
+  if (monthlyContribution > 0) {
+    params.monthlyContribution = String(monthlyContribution)
+  }
+  const queryParams = new URLSearchParams(params)
 
   let response
 
@@ -64,9 +68,9 @@ export const calculateFutureValue = async ({ ticker, investment, years }) => {
   }
 }
 
-export const calculateMultipleFunds = async ({ tickers, investment, years }) => {
+export const calculateMultipleFunds = async ({ tickers, investment, years, monthlyContribution = 0 }) => {
   const settled = await Promise.allSettled(
-    tickers.map((ticker) => calculateFutureValue({ ticker, investment, years })),
+    tickers.map((ticker) => calculateFutureValue({ ticker, investment, years, monthlyContribution })),
   )
 
   const results = {}

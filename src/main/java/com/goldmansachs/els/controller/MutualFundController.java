@@ -35,7 +35,8 @@ public class MutualFundController {
     public CalculationResult calculate(
             @RequestParam String ticker,
             @RequestParam double investment,
-            @RequestParam int years) {
+            @RequestParam int years,
+            @RequestParam(defaultValue = "0") double monthlyContribution) {
         if (ticker == null || ticker.trim().isEmpty()) {
             throw new InvalidInputException("ticker is required and must be non-blank.");
         }
@@ -45,9 +46,12 @@ public class MutualFundController {
         if (years < 0 || years > 100) {
             throw new InvalidInputException("years must be between 0 and 100.");
         }
+        if (monthlyContribution < 0) {
+            throw new InvalidInputException("monthlyContribution must be 0 or greater.");
+        }
 
         try {
-            CalculationResult result = calculationService.calculate(ticker, investment, years);
+            CalculationResult result = calculationService.calculate(ticker, investment, years, monthlyContribution);
             if (result == null) {
                 throw new TickerNotFoundException(ticker);
             }

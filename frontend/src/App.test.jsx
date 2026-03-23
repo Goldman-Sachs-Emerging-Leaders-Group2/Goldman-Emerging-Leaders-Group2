@@ -18,6 +18,8 @@ const calculationResponse = {
   expectedMarketReturn: 0.1553,
   capmReturn: 0.16658,
   futureValue: 52345.67,
+  monthlyContribution: 0,
+  totalContributed: 10000,
 }
 
 function mockFetch(fundsResult, calcResults) {
@@ -119,7 +121,7 @@ describe('App', () => {
       expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
     })
 
-    const investmentInput = screen.getByLabelText('Investment ($)')
+    const investmentInput = screen.getByLabelText('Initial Investment ($)')
     await userEvent.clear(investmentInput)
     await userEvent.type(investmentInput, '0')
     await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))

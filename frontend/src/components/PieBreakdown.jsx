@@ -8,36 +8,50 @@ const PieBreakdown = ({ result, isMulti }) => {
   if (!result) return null
 
   const invested = result.initialInvestment
-  const change = result.futureValue - invested
+  const monthly = result.monthlyContribution || 0
+  const totalContributed = result.totalContributed || invested
+  const totalMonthlyContribs = totalContributed - invested
+  const change = result.futureValue - totalContributed
   const isLoss = change < 0
   const years = result.years
+  const hasSIP = monthly > 0
 
-  const gainPercent = (invested > 0 && result.futureValue > 0) ? Math.round((Math.max(0, change) / result.futureValue) * 100) : 0
-  const investedPercent = 100 - gainPercent
+  const multiplier = totalContributed > 0 ? (change / totalContributed) : 0
 
-  const multiplier = invested > 0 ? (change / invested) : 0
+  let data, COLORS
+  if (isLoss) {
+    data = [
+      { name: 'Remaining Value', value: result.futureValue },
+      { name: 'Loss', value: Math.abs(change) },
+    ]
+    COLORS = ['var(--navy, #00244D)', '#E87040']
+  } else if (hasSIP) {
+    data = [
+      { name: 'Initial Investment', value: invested },
+      { name: 'Monthly Contributions', value: totalMonthlyContribs },
+      { name: 'Market Growth', value: change },
+    ]
+    COLORS = ['var(--navy, #00244D)', '#0EA5A1', 'var(--accent, #B5985A)']
+  } else {
+    data = [
+      { name: 'Your Investment', value: invested },
+      { name: 'Market Growth', value: change },
+    ]
+    COLORS = ['var(--navy, #00244D)', 'var(--accent, #B5985A)']
+  }
 
-  const data = isLoss
-    ? [
-        { name: 'Remaining Value', value: result.futureValue },
-        { name: 'Loss', value: Math.abs(change) },
-      ]
-    : [
-        { name: 'Your Investment', value: invested },
-        { name: 'Market Growth', value: change },
-      ]
-
-  const COLORS = isLoss
-    ? ['var(--navy, #00244D)', '#E87040']
-    : ['var(--navy, #00244D)', 'var(--accent, #B5985A)']
+  const growthPercent = (result.futureValue > 0 && totalContributed > 0)
+    ? Math.round((Math.max(0, change) / result.futureValue) * 100)
+    : 0
 
   const takeaway = isLoss
     ? `Your investment loses ${formatCurrency(Math.abs(multiplier))} for every $1 invested`
-    : `For every $1 you invest, the market adds ${formatCurrency(multiplier)}`
+    : hasSIP
+      ? `You contribute ${formatCurrency(totalContributed)} total. The market adds ${formatCurrency(change)} on top.`
+      : `For every $1 you invest, the market adds ${formatCurrency(multiplier)}`
 
-  // Center label content — changes on hover
+  const divisor = isLoss ? totalContributed : result.futureValue
   const hoveredData = activeIndex !== null ? data[activeIndex] : null
-  const divisor = isLoss ? invested : result.futureValue
   const hoveredPercent = activeIndex !== null && divisor > 0
     ? Math.round((data[activeIndex].value / divisor) * 100)
     : null
@@ -78,34 +92,29 @@ const PieBreakdown = ({ result, isMulti }) => {
             <>
               <span className="pie-center-amount">{formatCurrency(hoveredData.value)}</span>
               <span className="pie-center-sub">{hoveredData.name}</span>
-              <span className="pie-center-split">{hoveredPercent}% of total</span>
+              {hoveredPercent !== null && <span className="pie-center-split">{hoveredPercent}% of total</span>}
             </>
           ) : (
             <>
               <span className="pie-center-amount">{formatCurrency(result.futureValue)}</span>
               <span className="pie-center-sub">After {years} years</span>
-              {!isLoss && (
-                <span className="pie-center-split">{investedPercent}% yours · {gainPercent}% growth</span>
-              )}
+              {!isLoss && <span className="pie-center-split">{growthPercent}% market growth</span>}
             </>
           )}
         </div>
       </div>
       <div className="pie-legend">
-        <div className="pie-legend-item">
-          <span className="pie-legend-dot" style={{ background: '#00244D' }} />
-          <span className="pie-legend-label">{isLoss ? 'Remaining' : 'Invested'}</span>
-          <span className="pie-legend-value">{formatCurrency(isLoss ? result.futureValue : invested)}</span>
-        </div>
-        <div className="pie-legend-item">
-          <span className="pie-legend-dot" style={{ background: isLoss ? '#E87040' : '#B5985A' }} />
-          <span className={`pie-legend-label${isLoss ? ' pie-legend-label--loss' : ''}`}>
-            {isLoss ? 'Loss' : 'Growth'}
-          </span>
-          <span className={`pie-legend-value${isLoss ? ' pie-legend-value--loss' : ''}`}>
-            {isLoss ? `-${formatCurrency(Math.abs(change))}` : formatCurrency(change)}
-          </span>
-        </div>
+        {data.map((segment, i) => (
+          <div className="pie-legend-item" key={segment.name}>
+            <span className="pie-legend-dot" style={{ background: COLORS[i]?.replace('var(--navy, ', '').replace('var(--accent, ', '').replace(')', '') || COLORS[i] }} />
+            <span className={`pie-legend-label${isLoss && segment.name === 'Loss' ? ' pie-legend-label--loss' : ''}`}>
+              {segment.name}
+            </span>
+            <span className={`pie-legend-value${isLoss && segment.name === 'Loss' ? ' pie-legend-value--loss' : ''}`}>
+              {segment.name === 'Loss' ? `-${formatCurrency(segment.value)}` : formatCurrency(segment.value)}
+            </span>
+          </div>
+        ))}
       </div>
       <p className="pie-takeaway">{takeaway}</p>
     </div>

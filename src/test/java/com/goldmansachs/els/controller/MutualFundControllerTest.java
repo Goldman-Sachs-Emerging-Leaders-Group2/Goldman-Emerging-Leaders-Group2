@@ -32,7 +32,8 @@ class MutualFundControllerTest {
 
     private final CalculationResult sampleResult = new CalculationResult(
             "VFIAX", "Vanguard 500 Index Fund", 10_000, 10,
-            1.1, 0.0425, 0.1420, 0.15248, 46_012.34
+            1.1, 0.0425, 0.1420, 0.15248, 46_012.34,
+            0, 10_000
     );
 
     // --- Response shape tests ---
@@ -54,7 +55,7 @@ class MutualFundControllerTest {
 
     @Test
     void calculate_returnsFullResponseShape() throws Exception {
-        when(calculationService.calculate(eq("VFIAX"), eq(10_000.0), eq(10)))
+        when(calculationService.calculate(eq("VFIAX"), eq(10_000.0), eq(10), eq(0.0)))
                 .thenReturn(sampleResult);
 
         mockMvc.perform(get("/api/calculate")
@@ -162,7 +163,7 @@ class MutualFundControllerTest {
 
     @Test
     void calculate_returns404_whenTickerNotFound() throws Exception {
-        when(calculationService.calculate(eq("UNKNOWN"), anyDouble(), anyInt()))
+        when(calculationService.calculate(eq("UNKNOWN"), anyDouble(), anyInt(), anyDouble()))
                 .thenThrow(new IllegalArgumentException("Fund not found: UNKNOWN"));
 
         mockMvc.perform(get("/api/calculate")
@@ -175,7 +176,7 @@ class MutualFundControllerTest {
 
     @Test
     void calculate_returns502_whenExternalApiFails() throws Exception {
-        when(calculationService.calculate(eq("VFIAX"), anyDouble(), anyInt()))
+        when(calculationService.calculate(eq("VFIAX"), anyDouble(), anyInt(), anyDouble()))
                 .thenThrow(new ExternalApiException("Unable to retrieve beta"));
 
         mockMvc.perform(get("/api/calculate")
@@ -189,7 +190,7 @@ class MutualFundControllerTest {
 
     @Test
     void calculate_returns500_onUnexpectedException() throws Exception {
-        when(calculationService.calculate(eq("VFIAX"), anyDouble(), anyInt()))
+        when(calculationService.calculate(eq("VFIAX"), anyDouble(), anyInt(), anyDouble()))
                 .thenThrow(new RuntimeException("something broke"));
 
         mockMvc.perform(get("/api/calculate")
@@ -212,7 +213,7 @@ class MutualFundControllerTest {
 
     @Test
     void calculate_aliasEndpoint() throws Exception {
-        when(calculationService.calculate(eq("VFIAX"), eq(10_000.0), eq(10)))
+        when(calculationService.calculate(eq("VFIAX"), eq(10_000.0), eq(10), eq(0.0)))
                 .thenReturn(sampleResult);
 
         mockMvc.perform(get("/api/investment/future-value")
