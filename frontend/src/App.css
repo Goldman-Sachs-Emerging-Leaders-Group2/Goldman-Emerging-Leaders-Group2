@@ -155,7 +155,7 @@
 /* ── Hero ──────────────────────────────────────────── */
 .gs-hero {
   text-align: center;
-  padding: 3rem 2rem 1.5rem;
+  padding: 2rem 2rem 1rem;
   animation: fadeInUp 0.5s ease-out;
 }
 

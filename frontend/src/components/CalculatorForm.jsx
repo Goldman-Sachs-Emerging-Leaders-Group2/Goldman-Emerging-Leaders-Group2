@@ -247,10 +247,9 @@ const CalculatorForm = ({
             disabled={isCalculating}
           />
         </div>
-      </div>
 
-      <div className="field-group">
-        <label htmlFor="riskTolerance">Risk Tolerance</label>
+        <div className="field-group">
+          <label htmlFor="riskTolerance">Risk Tolerance</label>
         <div className="slider-group">
           <input
             id="riskTolerance"
@@ -266,6 +265,7 @@ const CalculatorForm = ({
           />
           <span className="slider-value">{riskTolerance}/10 · {getRiskLabel(riskTolerance)}</span>
         </div>
+      </div>
       </div>
 
       <button
