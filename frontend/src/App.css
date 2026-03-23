@@ -699,6 +699,11 @@
   color: var(--error);
 }
 
+.duplicate-warning {
+  color: var(--accent) !important;
+  animation: fadeIn 0.2s ease-out;
+}
+
 /* ── Fund Card Grid ───────────────────────────────── */
 .fund-card-grid {
   display: grid;

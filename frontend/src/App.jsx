@@ -200,8 +200,18 @@ function App() {
       setFormCollapsed(true)
 
       if (Object.keys(apiErrors).length > 0) {
-        const failedTickers = Object.keys(apiErrors).join(', ')
-        setCalculationError(`Some funds failed: ${failedTickers}`)
+        const failedList = Object.entries(apiErrors)
+          .map(([t, msg]) => `${t}: ${msg.includes('beta') || msg.includes('reach') ? 'ticker not found or unavailable' : msg}`)
+          .join('; ')
+        setCalculationError(failedList)
+
+        // Clean up failed custom tickers
+        const failedSet = new Set(Object.keys(apiErrors))
+        setCustomTickers(prev => prev.filter(t => !failedSet.has(t)))
+        setForm(prev => ({
+          ...prev,
+          tickers: prev.tickers.filter(t => !failedSet.has(t) || !customTickers.includes(t)),
+        }))
       }
 
       setLastCalculatedForm({
@@ -311,7 +321,7 @@ function App() {
                 onKeyDown={(e) => e.key === 'Enter' && setFormCollapsed(false)}
               >
                 <div className="form-summary__params">
-                  <span className="form-summary__tag">{form.tickers.join(', ')}</span>
+                  <span className="form-summary__tag">{resultTickers.join(', ')}</span>
                   <span className="form-summary__sep" aria-hidden="true" />
                   <span className="form-summary__tag">${Number(form.investment).toLocaleString()}</span>
                   <span className="form-summary__sep" aria-hidden="true" />
@@ -346,7 +356,10 @@ function App() {
               isLoadingFunds={isLoadingFunds}
               riskFreeRate={riskFreeRate}
               goalAmount={goalAmount}
-              onGoalChange={(e) => setGoalAmount(e.target.value)}
+              onGoalChange={(e) => {
+                const val = e.target.value
+                setGoalAmount(val === '' ? '' : String(Math.max(0, Number(val) || 0)))
+              }}
               customTickers={customTickers}
               onAddCustomTicker={handleAddCustomTicker}
               onRemoveCustomTicker={handleRemoveCustomTicker}

@@ -12,7 +12,7 @@ const PieBreakdown = ({ result, isMulti }) => {
   const isLoss = change < 0
   const years = result.years
 
-  const gainPercent = invested > 0 ? Math.round((Math.max(0, change) / result.futureValue) * 100) : 0
+  const gainPercent = (invested > 0 && result.futureValue > 0) ? Math.round((Math.max(0, change) / result.futureValue) * 100) : 0
   const investedPercent = 100 - gainPercent
 
   const multiplier = invested > 0 ? (change / invested) : 0
@@ -37,8 +37,9 @@ const PieBreakdown = ({ result, isMulti }) => {
 
   // Center label content — changes on hover
   const hoveredData = activeIndex !== null ? data[activeIndex] : null
-  const hoveredPercent = activeIndex !== null && result.futureValue > 0
-    ? Math.round((data[activeIndex].value / (isLoss ? invested : result.futureValue)) * 100)
+  const divisor = isLoss ? invested : result.futureValue
+  const hoveredPercent = activeIndex !== null && divisor > 0
+    ? Math.round((data[activeIndex].value / divisor) * 100)
     : null
 
   return (

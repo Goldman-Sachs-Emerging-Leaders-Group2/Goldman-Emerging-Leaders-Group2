@@ -25,6 +25,7 @@ const CalculatorForm = ({
   const [fundTab, setFundTab] = useState('mf')
   const [showCustom, setShowCustom] = useState(false)
   const [customInput, setCustomInput] = useState('')
+  const [duplicateWarning, setDuplicateWarning] = useState('')
 
   const mutualFunds = funds.filter(f => !ETF_TICKERS.has(f.ticker))
   const etfs = funds.filter(f => ETF_TICKERS.has(f.ticker))
@@ -32,6 +33,19 @@ const CalculatorForm = ({
 
   const mfSelected = form.tickers.filter(t => !ETF_TICKERS.has(t)).length
   const etfSelected = form.tickers.filter(t => ETF_TICKERS.has(t)).length
+
+  const tryAddCustom = (ticker) => {
+    if (!ticker || ticker.length < 1 || ticker.length > 5 || atMax) return
+    if (form.tickers.includes(ticker)) {
+      setDuplicateWarning(`${ticker} is already selected`)
+      setTimeout(() => setDuplicateWarning(''), 2000)
+      setCustomInput('')
+      return
+    }
+    setDuplicateWarning('')
+    onAddCustomTicker(ticker)
+    setCustomInput('')
+  }
 
   return (
     <form className="calculator-form" onSubmit={onSubmit} noValidate>
@@ -128,14 +142,12 @@ const CalculatorForm = ({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault()
-                  if (customInput.length >= 1 && customInput.length <= 5 && !atMax) {
-                    onAddCustomTicker(customInput)
-                    setCustomInput('')
-                  }
+                  tryAddCustom(customInput)
                 }
                 if (e.key === 'Escape') {
                   setShowCustom(false)
                   setCustomInput('')
+                  setDuplicateWarning('')
                 }
               }}
               placeholder="e.g. AAPL, MSFT, GOOGL"
@@ -146,18 +158,14 @@ const CalculatorForm = ({
               type="button"
               className="custom-search__add"
               disabled={customInput.length < 1 || customInput.length > 5 || atMax}
-              onClick={() => {
-                if (customInput.length >= 1 && customInput.length <= 5) {
-                  onAddCustomTicker(customInput)
-                  setCustomInput('')
-                }
-              }}
+              onClick={() => tryAddCustom(customInput)}
             >
               Add
             </button>
           </div>
         )}
 
+        {duplicateWarning && <p className="field-hint duplicate-warning">{duplicateWarning}</p>}
         {errors.tickers && <p className="field-error">{errors.tickers}</p>}
       </div>
 

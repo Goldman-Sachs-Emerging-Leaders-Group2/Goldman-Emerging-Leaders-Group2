@@ -10,7 +10,8 @@ const riskLabel = (beta) => {
 
 export const generateNarrative = (result) => {
   const { fundName, initialInvestment, futureValue, capmReturn, beta, years } = result
-  const timeToDouble = capmReturn > 0 ? (72 / (capmReturn * 100)).toFixed(1) : null
+  const rawDouble = capmReturn > 0 ? 72 / (capmReturn * 100) : null
+  const timeToDouble = rawDouble && rawDouble <= 100 ? rawDouble.toFixed(1) : null
   const realValue = futureValue / Math.pow(1 + INFLATION_RATE, years)
 
   let text = `Your ${formatCurrency(initialInvestment)} in ${fundName} could grow to ${formatCurrency(futureValue)} over ${years} years`

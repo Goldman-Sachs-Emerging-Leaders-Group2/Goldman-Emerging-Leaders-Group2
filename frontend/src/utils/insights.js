@@ -8,12 +8,14 @@ export const generateInsights = (result) => {
 
   // Time to Double
   if (capmReturn > 0) {
-    const timeToDouble = (72 / (capmReturn * 100)).toFixed(1)
-    insights.push({
-      type: 'positive',
-      label: 'Time to Double',
-      text: `Your money doubles roughly every ${timeToDouble} years at this rate`,
-    })
+    const rawDouble = 72 / (capmReturn * 100)
+    if (rawDouble <= 100) {
+      insights.push({
+        type: 'positive',
+        label: 'Time to Double',
+        text: `Your money doubles roughly every ${rawDouble.toFixed(1)} years at this rate`,
+      })
+    }
   }
 
   // Inflation Reality
@@ -33,7 +35,7 @@ export const generateInsights = (result) => {
   }
 
   // Return multiple
-  const multiple = futureValue / initialInvestment
+  const multiple = initialInvestment > 0 ? futureValue / initialInvestment : 0
   if (multiple >= 3) {
     insights.push({ type: 'positive', label: 'Return', text: `Investment projected to grow ${multiple.toFixed(1)}x` })
   } else if (multiple >= 2) {
