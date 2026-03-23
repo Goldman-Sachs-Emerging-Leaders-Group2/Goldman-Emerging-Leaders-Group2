@@ -1200,7 +1200,6 @@
 
 /* ── Comparison Table ──────────────────────────────── */
 .comparison-table-wrapper {
-  overflow-x: auto;
 }
 
 .comparison-table {
@@ -1214,7 +1213,6 @@
   padding: 0.55rem 0.65rem;
   text-align: left;
   border-bottom: 1px solid var(--card-border);
-  white-space: nowrap;
 }
 
 .comparison-table th {
