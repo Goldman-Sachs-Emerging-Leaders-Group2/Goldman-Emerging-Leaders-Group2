@@ -155,7 +155,7 @@
 /* ── Hero ──────────────────────────────────────────── */
 .gs-hero {
   text-align: center;
-  padding: 2rem 2rem 1rem;
+  padding: 2.5rem 2rem 1.25rem;
   animation: fadeInUp 0.5s ease-out;
 }
 
@@ -212,7 +212,7 @@
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.25rem;
   box-shadow: var(--card-shadow);
   transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
 }
@@ -225,7 +225,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .gs-card-header h2 {
@@ -412,13 +412,13 @@
 /* ── Calculator Form ────────────────────────────────── */
 .calculator-form {
   display: grid;
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem;
+  gap: 0.8rem;
 }
 
 .field-group {
@@ -574,7 +574,7 @@
 
 /* ── Fund Toggle (Ghost Pill) ────────────────────── */
 .fund-toggle {
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .fund-toggle__track {
@@ -723,8 +723,8 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.9rem;
+  gap: 0.2rem;
+  padding: 0.7rem;
   border-radius: 10px;
   border: 2px solid var(--card-border);
   background: var(--card-bg);
