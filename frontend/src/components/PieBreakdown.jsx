@@ -65,14 +65,14 @@ const PieBreakdown = ({ result, isMulti }) => {
         </div>
       )}
       <div className="pie-chart-wrapper">
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={220}>
           <PieChart>
             <Pie
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={75}
-              outerRadius={110}
+              innerRadius={65}
+              outerRadius={90}
               paddingAngle={2}
               dataKey="value"
               strokeWidth={0}
@@ -91,14 +91,12 @@ const PieBreakdown = ({ result, isMulti }) => {
           {hoveredData ? (
             <>
               <span className="pie-center-amount">{formatCurrency(hoveredData.value)}</span>
-              <span className="pie-center-sub">{hoveredData.name}</span>
-              {hoveredPercent !== null && <span className="pie-center-split">{hoveredPercent}% of total</span>}
+              <span className="pie-center-sub">{hoveredData.name}{hoveredPercent !== null ? ` · ${hoveredPercent}%` : ''}</span>
             </>
           ) : (
             <>
               <span className="pie-center-amount">{formatCurrency(result.futureValue)}</span>
               <span className="pie-center-sub">After {years} years</span>
-              {!isLoss && <span className="pie-center-split">{growthPercent}% market growth</span>}
             </>
           )}
         </div>
