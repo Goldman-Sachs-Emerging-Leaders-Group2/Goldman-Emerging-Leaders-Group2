@@ -1,8 +1,9 @@
 import { formatCurrency, formatDecimal, formatPercent } from './formatters'
+import { isRiskMatch, getComfortLabel } from './riskMatch'
 
 const INFLATION_RATE = 0.03
 
-export const generateInsights = (result) => {
+export const generateInsights = (result, riskTolerance) => {
   const { beta, capmReturn, futureValue, initialInvestment, expectedMarketReturn, fundName, years } = result
   const insights = []
 
@@ -52,12 +53,22 @@ export const generateInsights = (result) => {
     insights.push({ type: 'caution', label: 'vs Market', text: 'CAPM return is below the fund\'s historical average' })
   }
 
+  // Risk match
+  if (riskTolerance != null) {
+    const label = getComfortLabel(riskTolerance)
+    if (isRiskMatch(beta, riskTolerance)) {
+      insights.push({ type: 'positive', label: 'Risk Match', text: `Good fit — this fund's volatility matches your ${label.toLowerCase()} risk comfort` })
+    } else {
+      insights.push({ type: 'caution', label: 'Risk Match', text: `Heads up — this fund swings more than your ${label.toLowerCase()} comfort zone suggests` })
+    }
+  }
+
   const summary = `Based on CAPM, ${fundName} is projected to grow your ${formatCurrency(initialInvestment)} to ${formatCurrency(futureValue)} over ${years} years at ${formatPercent(capmReturn)} annually.`
 
   return { summary, insights }
 }
 
-export const generateComparisonInsights = (results) => {
+export const generateComparisonInsights = (results, riskTolerance) => {
   const entries = Object.entries(results)
   const insights = []
 
@@ -94,6 +105,19 @@ export const generateComparisonInsights = (results) => {
       label: 'Spread',
       text: `${formatCurrency(spread)} difference between best and worst projected outcome`,
     })
+  }
+
+  // Risk match
+  if (riskTolerance != null) {
+    const label = getComfortLabel(riskTolerance)
+    const matches = entries.filter(([, r]) => isRiskMatch(r.beta, riskTolerance))
+    const mismatches = entries.filter(([, r]) => !isRiskMatch(r.beta, riskTolerance))
+    if (mismatches.length === 0) {
+      insights.push({ type: 'positive', label: 'Risk Match', text: `All ${entries.length} funds match your ${label.toLowerCase()} risk profile` })
+    } else {
+      const names = mismatches.map(([, r]) => r.fundName).join(', ')
+      insights.push({ type: 'caution', label: 'Risk Match', text: `${names} may be too volatile for your ${label.toLowerCase()} preference` })
+    }
   }
 
   const summary = `Comparing ${entries.length} funds: ${best[1].fundName} leads in projected value while ${lowestBeta[1].fundName} offers the lowest volatility.`

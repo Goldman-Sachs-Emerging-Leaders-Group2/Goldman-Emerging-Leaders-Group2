@@ -250,9 +250,9 @@ function App() {
   // Results narrative
   const narrative = useMemo(() => {
     if (!hasResults) return null
-    if (isMulti) return generateComparisonNarrative(results, goalAmount)
-    return generateNarrative(primaryResult, goalAmount)
-  }, [results, hasResults, isMulti, primaryResult, goalAmount])
+    if (isMulti) return generateComparisonNarrative(results, goalAmount, riskTolerance)
+    return generateNarrative(primaryResult, goalAmount, riskTolerance)
+  }, [results, hasResults, isMulti, primaryResult, goalAmount, riskTolerance])
 
   return (
     <div className="app">
@@ -407,7 +407,7 @@ function App() {
                     {isCalculating && <span className="gs-badge calculating">Updating…</span>}
                   </div>
                 </div>
-                <ResultPanel results={results} isCalculating={isCalculating} isStale={isStale} />
+                <ResultPanel results={results} isCalculating={isCalculating} isStale={isStale} riskTolerance={riskTolerance} />
               </div>
 
               <div className="gs-card">
@@ -431,7 +431,7 @@ function App() {
                 <h2>Investment Insights</h2>
                 {isStale && <span className="gs-badge stale">Stale</span>}
               </div>
-              <InsightsPanel results={results} isCalculating={isCalculating} />
+              <InsightsPanel results={results} isCalculating={isCalculating} riskTolerance={riskTolerance} />
             </div>
           </section>
         )}

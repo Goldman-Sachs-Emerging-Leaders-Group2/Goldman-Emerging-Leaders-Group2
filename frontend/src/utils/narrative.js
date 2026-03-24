@@ -1,8 +1,9 @@
 import { formatCurrency } from './formatters'
+import { isRiskMatch, getComfortLabel } from './riskMatch'
 
 const INFLATION_RATE = 0.03
 
-export const generateNarrative = (result, goalAmount) => {
+export const generateNarrative = (result, goalAmount, riskTolerance) => {
   const { fundName, initialInvestment, futureValue, capmReturn, years, monthlyContribution = 0, totalContributed } = result
   const total = totalContributed || initialInvestment
   const hasSIP = monthlyContribution > 0
@@ -43,7 +44,7 @@ export const generateNarrative = (result, goalAmount) => {
   return text
 }
 
-export const generateComparisonNarrative = (results, goalAmount) => {
+export const generateComparisonNarrative = (results, goalAmount, riskTolerance) => {
   const entries = Object.values(results)
   const best = entries.reduce((a, b) => (b.futureValue > a.futureValue ? b : a))
   const safest = entries.reduce((a, b) => (b.beta < a.beta ? b : a))

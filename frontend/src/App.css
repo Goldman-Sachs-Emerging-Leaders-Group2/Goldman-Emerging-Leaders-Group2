@@ -1294,6 +1294,11 @@
   color: #2E6B9E;
 }
 
+.verdict-tag--caution {
+  background: rgba(232, 112, 64, 0.1);
+  color: #E87040;
+}
+
 /* ── Footer ────────────────────────────────────────── */
 .gs-footer {
   padding: 0 2rem 2rem;

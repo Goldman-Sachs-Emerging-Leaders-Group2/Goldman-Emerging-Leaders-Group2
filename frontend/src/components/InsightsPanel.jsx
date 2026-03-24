@@ -1,6 +1,6 @@
 import { generateInsights, generateComparisonInsights } from '../utils/insights'
 
-const InsightsPanel = ({ results, isCalculating }) => {
+const InsightsPanel = ({ results, isCalculating, riskTolerance }) => {
   const tickers = Object.keys(results)
   const hasResults = tickers.length > 0
 
@@ -17,8 +17,8 @@ const InsightsPanel = ({ results, isCalculating }) => {
   }
 
   const { summary, insights } = tickers.length > 1
-    ? generateComparisonInsights(results)
-    : generateInsights(results[tickers[0]])
+    ? generateComparisonInsights(results, riskTolerance)
+    : generateInsights(results[tickers[0]], riskTolerance)
 
   return (
     <div className={`insights-content${isCalculating ? ' updating' : ''}`} aria-live="polite">

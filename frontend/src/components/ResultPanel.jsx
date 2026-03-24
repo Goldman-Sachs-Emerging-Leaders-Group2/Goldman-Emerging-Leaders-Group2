@@ -83,7 +83,7 @@ const SingleResult = ({ result }) => {
   )
 }
 
-const ResultPanel = ({ results, isCalculating }) => {
+const ResultPanel = ({ results, isCalculating, riskTolerance }) => {
   const tickers = Object.keys(results)
   const hasResults = tickers.length > 0
   const isMulti = tickers.length > 1
@@ -103,7 +103,7 @@ const ResultPanel = ({ results, isCalculating }) => {
   return (
     <div className={isCalculating ? 'result-content updating' : 'result-content'} aria-live="polite">
       {isMulti ? (
-        <ComparisonTable results={results} />
+        <ComparisonTable results={results} riskTolerance={riskTolerance} />
       ) : (
         <SingleResult result={results[tickers[0]]} />
       )}
