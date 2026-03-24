@@ -2,6 +2,16 @@ import { useState } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { formatCurrency } from '../utils/formatters'
 
+// Short names for the donut center (space-constrained). Full names stay in the legend.
+const SHORT_NAMES = {
+  'Initial Investment': 'Initial',
+  'Your Investment': 'Invested',
+  'Monthly Contributions': 'Monthly',
+  'Market Growth': 'Growth',
+  'Remaining Value': 'Remaining',
+  'Loss': 'Loss',
+}
+
 const PieBreakdown = ({ result, isMulti }) => {
   const [activeIndex, setActiveIndex] = useState(null)
 
@@ -91,7 +101,7 @@ const PieBreakdown = ({ result, isMulti }) => {
           {hoveredData ? (
             <>
               <span className="pie-center-amount">{formatCurrency(hoveredData.value)}</span>
-              <span className="pie-center-sub">{hoveredData.name}{hoveredPercent !== null ? ` · ${hoveredPercent}%` : ''}</span>
+              <span className="pie-center-sub">{SHORT_NAMES[hoveredData.name] || hoveredData.name}{hoveredPercent !== null ? ` · ${hoveredPercent}%` : ''}</span>
             </>
           ) : (
             <>
