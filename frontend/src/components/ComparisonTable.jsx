@@ -1,6 +1,6 @@
 import { formatCurrency, formatDecimal, formatPercent } from '../utils/formatters'
 import { getFundColor } from '../utils/colors'
-import { isRiskMatch } from '../utils/riskMatch'
+import { isRiskMatch, isTooConservative } from '../utils/riskMatch'
 
 const ComparisonTable = ({ results, riskTolerance }) => {
   const tickers = Object.keys(results)
@@ -27,6 +27,7 @@ const ComparisonTable = ({ results, riskTolerance }) => {
             const isBestGrowth = ticker === bestFV
             const isSafest = ticker === lowestBeta
             const riskOk = riskTolerance == null || isRiskMatch(r.beta, riskTolerance)
+            const tooSafe = riskTolerance != null && isTooConservative(r.beta, riskTolerance)
             return (
               <tr key={ticker}>
                 <td>
@@ -47,6 +48,7 @@ const ComparisonTable = ({ results, riskTolerance }) => {
                   {isBestGrowth && !isSafest && <span className="verdict-tag verdict-tag--growth">Best Growth</span>}
                   {isSafest && !isBestGrowth && <span className="verdict-tag verdict-tag--safe">Safest</span>}
                   {!riskOk && <span className="verdict-tag verdict-tag--caution">High Risk</span>}
+                  {tooSafe && <span className="verdict-tag verdict-tag--neutral">Conservative</span>}
                 </td>
               </tr>
             )

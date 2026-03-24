@@ -1299,6 +1299,11 @@
   color: #E87040;
 }
 
+.verdict-tag--neutral {
+  background: rgba(136, 150, 166, 0.1);
+  color: var(--text-muted);
+}
+
 /* ── Footer ────────────────────────────────────────── */
 .gs-footer {
   padding: 0 2rem 2rem;

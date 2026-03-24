@@ -13,3 +13,6 @@ export const getBetaThreshold = (tolerance) =>
 
 export const isRiskMatch = (beta, tolerance) =>
   beta <= getBetaThreshold(tolerance)
+
+export const isTooConservative = (beta, tolerance) =>
+  tolerance >= 7 && beta < 0.5

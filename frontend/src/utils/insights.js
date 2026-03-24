@@ -1,5 +1,5 @@
 import { formatCurrency, formatDecimal, formatPercent } from './formatters'
-import { isRiskMatch, getComfortLabel } from './riskMatch'
+import { isRiskMatch, isTooConservative, getComfortLabel } from './riskMatch'
 
 const INFLATION_RATE = 0.03
 
@@ -56,7 +56,9 @@ export const generateInsights = (result, riskTolerance) => {
   // Risk match
   if (riskTolerance != null) {
     const label = getComfortLabel(riskTolerance)
-    if (isRiskMatch(beta, riskTolerance)) {
+    if (isTooConservative(beta, riskTolerance)) {
+      insights.push({ type: 'neutral', label: 'Risk Match', text: `This fund may be too conservative for your ${label.toLowerCase()} appetite — steadier but potentially lower returns` })
+    } else if (isRiskMatch(beta, riskTolerance)) {
       insights.push({ type: 'positive', label: 'Risk Match', text: `Good fit — this fund's volatility matches your ${label.toLowerCase()} risk comfort` })
     } else {
       insights.push({ type: 'caution', label: 'Risk Match', text: `Heads up — this fund swings more than your ${label.toLowerCase()} comfort zone suggests` })
