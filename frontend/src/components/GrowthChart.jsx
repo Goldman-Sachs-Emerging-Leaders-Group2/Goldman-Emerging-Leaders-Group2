@@ -7,15 +7,31 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
+  ReferenceDot,
 } from 'recharts'
 import { generateProjectionData, generateMultiProjectionData } from '../utils/projection'
 import { formatCurrency } from '../utils/formatters'
-import { getFundColor } from '../utils/colors'
+import { getAssetColor } from '../utils/colors'
+
+const GOLD = '#D4A846'
 
 const formatYAxisTick = (value) => {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`
   if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`
   return `$${value}`
+}
+
+const EndpointLabel = ({ viewBox, value }) => {
+  if (!viewBox) return null
+  const { x, y } = viewBox
+  return (
+    <g>
+      <rect x={x - 2} y={y - 24} width={70} height={22} rx={4} fill={GOLD} />
+      <text x={x + 33} y={y - 10} textAnchor="middle" fill="#0b1520" fontSize={11} fontWeight={700} fontFamily="'JetBrains Mono', monospace">
+        {formatYAxisTick(value)}
+      </text>
+    </g>
+  )
 }
 
 const MultiTooltip = ({ active, payload, label }) => {
@@ -31,6 +47,11 @@ const MultiTooltip = ({ active, payload, label }) => {
       ))}
     </div>
   )
+}
+
+const getChartColor = (index) => {
+  if (index === 0) return GOLD
+  return getAssetColor(index)
 }
 
 const GrowthChart = ({ results, isCalculating }) => {
@@ -55,21 +76,27 @@ const GrowthChart = ({ results, isCalculating }) => {
     : generateProjectionData(results[tickers[0]])
 
   const dataKeys = isMulti ? tickers : ['value']
+  const lastPoint = data[data.length - 1]
+  const primaryKey = dataKeys[0]
+  const endpointValue = lastPoint?.[primaryKey]
 
   return (
     <div
       className={`chart-container${isCalculating ? ' updating' : ''}`}
       aria-label="Projected investment growth chart"
     >
-      <ResponsiveContainer width="100%" height={300}>
-        <AreaChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={350}>
+        <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
           <defs>
-            {dataKeys.map((key, i) => (
-              <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={getFundColor(i)} stopOpacity={0.15} />
-                <stop offset="100%" stopColor={getFundColor(i)} stopOpacity={0.01} />
-              </linearGradient>
-            ))}
+            {dataKeys.map((key, i) => {
+              const color = getChartColor(i)
+              return (
+                <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={color} stopOpacity={0.01} />
+                </linearGradient>
+              )
+            })}
           </defs>
           <CartesianGrid stroke="#1a2d3f" strokeDasharray="3 3" />
           <XAxis
@@ -92,18 +119,29 @@ const GrowthChart = ({ results, isCalculating }) => {
               wrapperStyle={{ color: '#7a96b2', fontSize: 12, paddingTop: 8 }}
             />
           )}
-          {dataKeys.map((key, i) => (
-            <Area
-              key={key}
-              type="monotone"
-              dataKey={key}
-              stroke={getFundColor(i)}
-              strokeWidth={2}
-              fill={`url(#gradient-${key})`}
-              dot={false}
-              activeDot={{ r: 4, fill: getFundColor(i), stroke: '#0f1c2b', strokeWidth: 2 }}
+          {dataKeys.map((key, i) => {
+            const color = getChartColor(i)
+            return (
+              <Area
+                key={key}
+                type="monotone"
+                dataKey={key}
+                stroke={color}
+                strokeWidth={2}
+                fill={`url(#gradient-${key})`}
+                dot={false}
+                activeDot={{ r: 4, fill: color, stroke: '#0f1c2b', strokeWidth: 2 }}
+              />
+            )
+          })}
+          {endpointValue != null && lastPoint && (
+            <ReferenceDot
+              x={lastPoint.year}
+              y={endpointValue}
+              r={0}
+              label={<EndpointLabel value={endpointValue} />}
             />
-          ))}
+          )}
         </AreaChart>
       </ResponsiveContainer>
     </div>

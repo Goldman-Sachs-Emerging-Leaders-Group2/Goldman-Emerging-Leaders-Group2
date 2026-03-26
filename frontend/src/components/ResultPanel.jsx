@@ -7,7 +7,7 @@ import ComparisonTable from './ComparisonTable'
 
 const SingleResult = ({ result }) => (
   <div className="result-content" aria-live="polite">
-    <p className="result-fund-name">{result.fundName || 'Unknown Fund'}</p>
+    <p className="result-fund-name">{result.assetName || 'Unknown Asset'}</p>
 
     <div className="result-hero-card">
       <span className="result-hero-label">Future Value</span>
@@ -53,6 +53,45 @@ const SingleResult = ({ result }) => (
   </div>
 )
 
+const BestPerformerBar = ({ results }) => {
+  const tickers = Object.keys(results)
+  if (tickers.length < 2) return null
+
+  const sorted = [...tickers].sort((a, b) => results[b].futureValue - results[a].futureValue)
+  const bestTicker = sorted[0]
+  const secondTicker = sorted[1]
+  const best = results[bestTicker]
+  const second = results[secondTicker]
+  const advantage = best.futureValue - second.futureValue
+  const advantagePct = second.futureValue > 0 ? advantage / second.futureValue : 0
+
+  return (
+    <div className="best-performer-bar">
+      <svg className="trophy-icon" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+        <path d="M4 22h16" />
+        <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+        <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+      </svg>
+      <div className="best-performer-info">
+        <span className="best-performer-label">Best Performer</span>
+        <span className="best-performer-value">{bestTicker} — {best.assetName}</span>
+      </div>
+      <div className="best-performer-advantage">
+        <span className="best-performer-label">Advantage</span>
+        <span className="best-performer-diff">
+          <svg viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+          </svg>
+          +{formatCurrency(advantage)} (+{formatPercent(advantagePct)})
+        </span>
+      </div>
+    </div>
+  )
+}
+
 const ResultPanel = ({ results, isCalculating }) => {
   const tickers = Object.keys(results)
   const hasResults = tickers.length > 0
@@ -73,7 +112,10 @@ const ResultPanel = ({ results, isCalculating }) => {
   return (
     <div className={isCalculating ? 'result-content updating' : 'result-content'} aria-live="polite">
       {isMulti ? (
-        <ComparisonTable results={results} />
+        <>
+          <ComparisonTable results={results} />
+          <BestPerformerBar results={results} />
+        </>
       ) : (
         <SingleResult result={results[tickers[0]]} />
       )}

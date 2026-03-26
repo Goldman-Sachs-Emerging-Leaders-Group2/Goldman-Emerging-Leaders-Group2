@@ -1,7 +1,7 @@
 import { formatCurrency, formatDecimal, formatPercent } from './formatters'
 
 export const generateInsights = (result) => {
-  const { beta, capmReturn, futureValue, initialInvestment, expectedMarketReturn, fundName, years } = result
+  const { beta, capmReturn, futureValue, initialInvestment, expectedMarketReturn, assetName, years } = result
   const insights = []
 
   // Volatility
@@ -37,8 +37,7 @@ export const generateInsights = (result) => {
     insights.push({ type: 'caution', label: 'vs Market', text: 'CAPM return below market average' })
   }
 
-  // Summary
-  const summary = `Based on CAPM, ${fundName} with a beta of ${formatDecimal(beta, 2)} is projected to grow your ${formatCurrency(initialInvestment)} to ${formatCurrency(futureValue)} over ${years} years at ${formatPercent(capmReturn)} annually.`
+  const summary = `Based on CAPM, ${assetName} with a beta of ${formatDecimal(beta, 2)} is projected to grow your ${formatCurrency(initialInvestment)} to ${formatCurrency(futureValue)} over ${years} years at ${formatPercent(capmReturn)} annually.`
 
   return { summary, insights }
 }
@@ -47,31 +46,27 @@ export const generateComparisonInsights = (results) => {
   const entries = Object.entries(results)
   const insights = []
 
-  // Best performer
   const best = entries.reduce((a, b) => (b[1].futureValue > a[1].futureValue ? b : a))
   insights.push({
     type: 'positive',
     label: 'Top Performer',
-    text: `${best[1].fundName} has the highest projected future value at ${formatCurrency(best[1].futureValue)}`,
+    text: `${best[1].assetName} has the highest projected future value at ${formatCurrency(best[1].futureValue)}`,
   })
 
-  // Lowest risk
   const lowestBeta = entries.reduce((a, b) => (b[1].beta < a[1].beta ? b : a))
   insights.push({
     type: 'positive',
     label: 'Lowest Risk',
-    text: `${lowestBeta[1].fundName} has the lowest beta (${formatDecimal(lowestBeta[1].beta, 2)}) — least volatile`,
+    text: `${lowestBeta[1].assetName} has the lowest beta (${formatDecimal(lowestBeta[1].beta, 2)}) — least volatile`,
   })
 
-  // Highest return
   const highestReturn = entries.reduce((a, b) => (b[1].capmReturn > a[1].capmReturn ? b : a))
   insights.push({
     type: 'positive',
     label: 'Best Return',
-    text: `${highestReturn[1].fundName} leads with a CAPM return of ${formatPercent(highestReturn[1].capmReturn)}`,
+    text: `${highestReturn[1].assetName} leads with a CAPM return of ${formatPercent(highestReturn[1].capmReturn)}`,
   })
 
-  // Spread
   const worst = entries.reduce((a, b) => (b[1].futureValue < a[1].futureValue ? b : a))
   const spread = best[1].futureValue - worst[1].futureValue
   if (spread > 0) {
@@ -82,7 +77,7 @@ export const generateComparisonInsights = (results) => {
     })
   }
 
-  const summary = `Comparing ${entries.length} funds: ${best[1].fundName} leads in projected value while ${lowestBeta[1].fundName} offers the lowest volatility.`
+  const summary = `Comparing ${entries.length} assets: ${best[1].assetName} leads in projected value while ${lowestBeta[1].assetName} offers the lowest volatility.`
 
   return { summary, insights }
 }

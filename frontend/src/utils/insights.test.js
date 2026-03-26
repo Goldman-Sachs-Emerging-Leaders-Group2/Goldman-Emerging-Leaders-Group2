@@ -7,7 +7,8 @@ const baseResult = {
   futureValue: 52345.67,
   initialInvestment: 10000,
   expectedMarketReturn: 0.1553,
-  fundName: 'Vanguard 500 Index Fund',
+  assetName: 'Vanguard 500 Index Fund',
+  assetType: 'MUTUAL_FUND',
   years: 10,
   riskFreeRate: 0.0425,
 }
@@ -21,7 +22,7 @@ describe('generateInsights', () => {
     expect(insights.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('summary includes fund name', () => {
+  it('summary includes asset name', () => {
     const { summary } = generateInsights(baseResult)
     expect(summary).toContain('Vanguard 500 Index Fund')
   })
@@ -75,12 +76,12 @@ describe('generateInsights', () => {
 describe('generateComparisonInsights', () => {
   const results = {
     VFIAX: baseResult,
-    FXAIX: { ...baseResult, fundName: 'Fidelity 500', futureValue: 48000, beta: 0.9, capmReturn: 0.14 },
+    SPY: { ...baseResult, assetName: 'SPDR S&P 500 ETF', assetType: 'ETF', futureValue: 48000, beta: 0.9, capmReturn: 0.14 },
   }
 
   it('returns summary and insights', () => {
     const { summary, insights } = generateComparisonInsights(results)
-    expect(summary).toContain('Comparing 2 funds')
+    expect(summary).toContain('Comparing 2 assets')
     expect(insights.length).toBeGreaterThanOrEqual(3)
   })
 
@@ -90,10 +91,10 @@ describe('generateComparisonInsights', () => {
     expect(top.text).toContain('Vanguard 500')
   })
 
-  it('identifies lowest risk fund', () => {
+  it('identifies lowest risk asset', () => {
     const { insights } = generateComparisonInsights(results)
     const low = insights.find((i) => i.label === 'Lowest Risk')
-    expect(low.text).toContain('Fidelity 500')
+    expect(low.text).toContain('SPDR S&P 500 ETF')
     expect(low.text).toContain('0.90')
   })
 

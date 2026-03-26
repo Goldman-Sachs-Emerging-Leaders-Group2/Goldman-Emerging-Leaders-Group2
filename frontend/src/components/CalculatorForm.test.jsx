@@ -3,37 +3,43 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CalculatorForm from './CalculatorForm'
 
-const funds = [
-  { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', expectedAnnualReturn: 0.1553 },
-  { ticker: 'FXAIX', name: 'Fidelity 500 Index Fund', expectedAnnualReturn: 0.1556 },
+const assets = [
+  { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', type: 'MUTUAL_FUND', expectedAnnualReturn: 0.1553 },
+  { ticker: 'SPY', name: 'SPDR S&P 500 ETF Trust', type: 'ETF', expectedAnnualReturn: 0.1548 },
 ]
 
 const defaultProps = {
-  funds,
+  assets,
   form: { tickers: ['VFIAX'], investment: '10000', years: '10' },
   errors: {},
   onChange: vi.fn(),
   onToggleTicker: vi.fn(),
   onSubmit: vi.fn((e) => e.preventDefault()),
   isCalculating: false,
-  isLoadingFunds: false,
+  isLoadingAssets: false,
   riskFreeRate: null,
 }
 
 describe('CalculatorForm', () => {
-  it('renders fund checkboxes from props', () => {
+  it('renders asset checkboxes from props', () => {
     render(<CalculatorForm {...defaultProps} />)
     expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
-    expect(screen.getByText(/FXAIX/)).toBeInTheDocument()
+    expect(screen.getByText(/SPY/)).toBeInTheDocument()
   })
 
-  it('shows "No funds available" when funds array is empty', () => {
-    render(<CalculatorForm {...defaultProps} funds={[]} />)
-    expect(screen.getByText('No funds available')).toBeInTheDocument()
+  it('shows asset type badges', () => {
+    render(<CalculatorForm {...defaultProps} />)
+    expect(screen.getByText('MF')).toBeInTheDocument()
+    expect(screen.getByText('ETF')).toBeInTheDocument()
   })
 
-  it('disables checkboxes when loading funds', () => {
-    render(<CalculatorForm {...defaultProps} isLoadingFunds={true} />)
+  it('shows "No assets available" when assets array is empty', () => {
+    render(<CalculatorForm {...defaultProps} assets={[]} />)
+    expect(screen.getByText('No assets available')).toBeInTheDocument()
+  })
+
+  it('disables checkboxes when loading assets', () => {
+    render(<CalculatorForm {...defaultProps} isLoadingAssets={true} />)
     const checkboxes = screen.getAllByRole('checkbox')
     checkboxes.forEach((cb) => expect(cb).toBeDisabled())
   })
@@ -49,8 +55,8 @@ describe('CalculatorForm', () => {
     expect(screen.getByRole('button', { name: /calculating/i })).toBeDisabled()
   })
 
-  it('disables submit button when no funds', () => {
-    render(<CalculatorForm {...defaultProps} funds={[]} />)
+  it('disables submit button when no assets', () => {
+    render(<CalculatorForm {...defaultProps} assets={[]} />)
     expect(screen.getByRole('button')).toBeDisabled()
   })
 
@@ -64,11 +70,6 @@ describe('CalculatorForm', () => {
     expect(screen.getByText('Investment must be greater than 0.')).toBeInTheDocument()
   })
 
-  it('shows "Calculating…" button text when calculating', () => {
-    render(<CalculatorForm {...defaultProps} isCalculating={true} />)
-    expect(screen.getByRole('button', { name: /calculating/i })).toBeInTheDocument()
-  })
-
   it('displays formatted risk-free rate when provided', () => {
     render(<CalculatorForm {...defaultProps} riskFreeRate={0.0425} />)
     expect(screen.getByLabelText('Risk-free rate from last calculation')).toHaveValue('4.25%')
@@ -78,8 +79,8 @@ describe('CalculatorForm', () => {
     const onToggleTicker = vi.fn()
     render(<CalculatorForm {...defaultProps} onToggleTicker={onToggleTicker} />)
     const checkboxes = screen.getAllByRole('checkbox')
-    await userEvent.click(checkboxes[1]) // click FXAIX
-    expect(onToggleTicker).toHaveBeenCalledWith('FXAIX')
+    await userEvent.click(checkboxes[1]) // click SPY
+    expect(onToggleTicker).toHaveBeenCalledWith('SPY')
   })
 
   it('calls onSubmit when form is submitted', async () => {

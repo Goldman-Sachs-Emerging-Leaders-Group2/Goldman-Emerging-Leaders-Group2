@@ -1,12 +1,18 @@
 import { formatCurrency, formatDecimal, formatPercent } from '../utils/formatters'
-import { getFundColor } from '../utils/colors'
+import { getAssetColor } from '../utils/colors'
+
+const TYPE_DISPLAY = {
+  MUTUAL_FUND: 'Mutual Fund',
+  ETF: 'ETF',
+}
 
 const METRICS = [
-  { key: 'fundName', label: 'Fund Name', format: (v) => v },
+  { key: 'assetName', label: 'Asset Name', format: (v) => v },
+  { key: 'assetType', label: 'Type', format: (v) => TYPE_DISPLAY[v] || v },
   { key: 'beta', label: 'Beta', format: (v) => formatDecimal(v, 2), best: 'min' },
   { key: 'capmReturn', label: 'CAPM Return', format: (v) => formatPercent(v), best: 'max' },
   { key: 'expectedMarketReturn', label: 'Market Return', format: (v) => formatPercent(v) },
-  { key: 'futureValue', label: 'Future Value', format: (v) => formatCurrency(v), best: 'max' },
+  { key: 'futureValue', label: 'Future Value', format: (v) => formatCurrency(v), best: 'max', highlight: true },
 ]
 
 const ComparisonTable = ({ results }) => {
@@ -29,22 +35,26 @@ const ComparisonTable = ({ results }) => {
             <th>Metric</th>
             {tickers.map((ticker, i) => (
               <th key={ticker}>
-                <span className="comparison-header-dot" style={{ backgroundColor: getFundColor(i) }} />
+                <span className="comparison-header-dot" style={{ backgroundColor: getAssetColor(i) }} />
                 {ticker}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {METRICS.map(({ key, label, format, best }) => {
+          {METRICS.map(({ key, label, format, best, highlight }) => {
             const bestTicker = getBestTicker(key, best)
             return (
-              <tr key={key}>
+              <tr key={key} className={highlight ? 'comparison-row-highlight' : ''}>
                 <td className="comparison-metric-label">{label}</td>
                 {tickers.map((ticker) => (
                   <td
                     key={ticker}
-                    className={bestTicker === ticker ? 'comparison-best' : ''}
+                    className={
+                      bestTicker === ticker
+                        ? highlight ? 'comparison-best-gold' : 'comparison-best'
+                        : ''
+                    }
                   >
                     {format(results[ticker][key])}
                   </td>

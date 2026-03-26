@@ -12,8 +12,8 @@ const parseError = async (response) => {
   return new Error(message)
 }
 
-export const getMutualFunds = async () => {
-  const response = await fetch('/api/mutualfunds')
+export const getAssets = async () => {
+  const response = await fetch('/api/assets')
 
   if (!response.ok) {
     throw await parseError(response)
@@ -64,7 +64,7 @@ export const calculateFutureValue = async ({ ticker, investment, years }) => {
   }
 }
 
-export const calculateMultipleFunds = async ({ tickers, investment, years }) => {
+export const calculateMultipleAssets = async ({ tickers, investment, years }) => {
   const settled = await Promise.allSettled(
     tickers.map((ticker) => calculateFutureValue({ ticker, investment, years })),
   )

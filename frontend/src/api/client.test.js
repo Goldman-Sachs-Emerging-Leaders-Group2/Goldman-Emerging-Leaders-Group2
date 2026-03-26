@@ -1,21 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getMutualFunds, calculateFutureValue, calculateMultipleFunds } from './client'
+import { getAssets, calculateFutureValue, calculateMultipleAssets } from './client'
 
 beforeEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('getMutualFunds', () => {
-  it('returns parsed fund array on success', async () => {
-    const funds = [{ ticker: 'VFIAX', name: 'Vanguard 500', expectedAnnualReturn: 0.15 }]
+describe('getAssets', () => {
+  it('returns parsed asset array on success', async () => {
+    const assets = [{ ticker: 'VFIAX', name: 'Vanguard 500', type: 'MUTUAL_FUND', expectedAnnualReturn: 0.15 }]
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve(funds),
+      json: () => Promise.resolve(assets),
     })
 
-    const result = await getMutualFunds()
-    expect(result).toEqual(funds)
-    expect(fetch).toHaveBeenCalledWith('/api/mutualfunds')
+    const result = await getAssets()
+    expect(result).toEqual(assets)
+    expect(fetch).toHaveBeenCalledWith('/api/assets')
   })
 
   it('throws with server message on HTTP error', async () => {
@@ -25,7 +25,7 @@ describe('getMutualFunds', () => {
       json: () => Promise.resolve({ message: 'Server error' }),
     })
 
-    await expect(getMutualFunds()).rejects.toThrow('Server error')
+    await expect(getAssets()).rejects.toThrow('Server error')
   })
 
   it('throws on invalid JSON response', async () => {
@@ -34,7 +34,7 @@ describe('getMutualFunds', () => {
       json: () => Promise.reject(new Error('bad json')),
     })
 
-    await expect(getMutualFunds()).rejects.toThrow('Received an invalid response from the server.')
+    await expect(getAssets()).rejects.toThrow('Received an invalid response from the server.')
   })
 })
 
@@ -85,10 +85,10 @@ describe('calculateFutureValue', () => {
   })
 })
 
-describe('calculateMultipleFunds', () => {
+describe('calculateMultipleAssets', () => {
   it('returns results map for all successful calls', async () => {
     const resultA = { ticker: 'VFIAX', futureValue: 50000 }
-    const resultB = { ticker: 'FXAIX', futureValue: 48000 }
+    const resultB = { ticker: 'SPY', futureValue: 48000 }
 
     globalThis.fetch = vi.fn((url) => {
       const ticker = new URLSearchParams(url.split('?')[1]).get('ticker')
@@ -96,14 +96,14 @@ describe('calculateMultipleFunds', () => {
       return Promise.resolve({ ok: true, json: () => Promise.resolve(data) })
     })
 
-    const { results, errors } = await calculateMultipleFunds({
-      tickers: ['VFIAX', 'FXAIX'],
+    const { results, errors } = await calculateMultipleAssets({
+      tickers: ['VFIAX', 'SPY'],
       investment: 10000,
       years: 10,
     })
 
     expect(results.VFIAX).toEqual(resultA)
-    expect(results.FXAIX).toEqual(resultB)
+    expect(results.SPY).toEqual(resultB)
     expect(Object.keys(errors)).toHaveLength(0)
   })
 
@@ -116,7 +116,7 @@ describe('calculateMultipleFunds', () => {
       return Promise.resolve({ ok: false, status: 502, json: () => Promise.resolve({ message: 'API down' }) })
     })
 
-    const { results, errors } = await calculateMultipleFunds({
+    const { results, errors } = await calculateMultipleAssets({
       tickers: ['VFIAX', 'BAD'],
       investment: 10000,
       years: 10,

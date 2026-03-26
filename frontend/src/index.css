@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -10,6 +12,16 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --gold-primary: #D4A846;
+  --gold-dark: #B8922E;
+  --gold-light: #E8C96A;
+  --gold-transparent: rgba(212, 168, 70, 0.15);
+  --gold-border: rgba(212, 168, 70, 0.35);
+  --gold-bg-subtle: rgba(212, 168, 70, 0.08);
+
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 body {

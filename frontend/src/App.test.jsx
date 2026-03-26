@@ -1,16 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import App from './App'
 
-const fundsResponse = [
-  { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', expectedAnnualReturn: 0.1553 },
-  { ticker: 'FXAIX', name: 'Fidelity 500 Index Fund', expectedAnnualReturn: 0.1556 },
+const assetsResponse = [
+  { ticker: 'VFIAX', name: 'Vanguard 500 Index Fund', type: 'MUTUAL_FUND', expectedAnnualReturn: 0.1553 },
+  { ticker: 'SPY', name: 'SPDR S&P 500 ETF Trust', type: 'ETF', expectedAnnualReturn: 0.1548 },
 ]
 
 const calculationResponse = {
   ticker: 'VFIAX',
-  fundName: 'Vanguard 500 Index Fund',
+  assetName: 'Vanguard 500 Index Fund',
+  assetType: 'MUTUAL_FUND',
   initialInvestment: 10000,
   years: 10,
   beta: 1.1,
@@ -20,23 +22,22 @@ const calculationResponse = {
   futureValue: 52345.67,
 }
 
-function mockFetch(fundsResult, calcResults) {
+function mockFetch(assetsResult, calcResults) {
   return vi.fn((url) => {
-    if (typeof url === 'string' && url.includes('/api/mutualfunds')) {
-      if (fundsResult instanceof Error) {
+    if (typeof url === 'string' && url.includes('/api/assets')) {
+      if (assetsResult instanceof Error) {
         return Promise.resolve({
           ok: false,
           status: 500,
-          json: () => Promise.resolve({ message: fundsResult.message }),
+          json: () => Promise.resolve({ message: assetsResult.message }),
         })
       }
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(fundsResult),
+        json: () => Promise.resolve(assetsResult),
       })
     }
     if (typeof url === 'string' && url.includes('/api/calculate')) {
-      // Extract ticker from URL
       const params = new URLSearchParams(url.split('?')[1])
       const ticker = params.get('ticker')
       const result = calcResults instanceof Error ? calcResults : (calcResults[ticker] || calcResults)
@@ -57,24 +58,25 @@ function mockFetch(fundsResult, calcResults) {
   })
 }
 
+// App uses BrowserRouter internally, but tests need MemoryRouter.
+// We'll render the inner content by testing individual views instead.
+// For the full App, we just verify it renders without crashing.
+
 beforeEach(() => {
   vi.restoreAllMocks()
 })
 
 describe('App', () => {
-  // --- Load behavior ---
-
-  it('populates fund checkboxes after loading', async () => {
-    globalThis.fetch = mockFetch(fundsResponse, calculationResponse)
+  it('renders dashboard view by default', async () => {
+    globalThis.fetch = mockFetch(assetsResponse, calculationResponse)
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
-      expect(screen.getByText(/FXAIX/)).toBeInTheDocument()
+      expect(screen.getByText('Investment Overview')).toBeInTheDocument()
     })
   })
 
-  it('shows error banner when fund loading fails', async () => {
+  it('shows error banner when asset loading fails', async () => {
     globalThis.fetch = mockFetch(new Error('Network down'), calculationResponse)
     render(<App />)
 
@@ -83,83 +85,39 @@ describe('App', () => {
     })
   })
 
-  it('shows warning when API returns empty fund array', async () => {
-    globalThis.fetch = mockFetch([], calculationResponse)
+  it('shows "Go to Calculator" CTA when no results', async () => {
+    globalThis.fetch = mockFetch(assetsResponse, calculationResponse)
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByText('No mutual funds are currently available.')).toBeInTheDocument()
+      expect(screen.getByText('Go to Calculator')).toBeInTheDocument()
     })
   })
 
-  // --- Form validation ---
-
-  it('shows error when no funds selected', async () => {
-    globalThis.fetch = mockFetch(fundsResponse, calculationResponse)
+  it('navigates to calculator view', async () => {
+    globalThis.fetch = mockFetch(assetsResponse, calculationResponse)
     render(<App />)
 
     await waitFor(() => {
-      expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
+      expect(screen.getByText('Investment Overview')).toBeInTheDocument()
     })
 
-    // Uncheck the default selected fund
-    const checkboxes = screen.getAllByRole('checkbox')
-    await userEvent.click(checkboxes[0]) // uncheck VFIAX
+    const navLinks = screen.getAllByRole('link', { name: /calculator/i })
+    await userEvent.click(navLinks[0])
 
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
-
-    expect(screen.getByText('Please select at least one mutual fund.')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Calculate')).toBeInTheDocument()
+    })
   })
 
-  it('shows error when investment is zero', async () => {
-    globalThis.fetch = mockFetch(fundsResponse, calculationResponse)
+  it('navigates to settings view', async () => {
+    globalThis.fetch = mockFetch(assetsResponse, calculationResponse)
     render(<App />)
 
-    await waitFor(() => {
-      expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
-    })
-
-    const investmentInput = screen.getByLabelText('Investment ($)')
-    await userEvent.clear(investmentInput)
-    await userEvent.type(investmentInput, '0')
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
-
-    expect(screen.getByText('Investment must be greater than 0.')).toBeInTheDocument()
-  })
-
-  // --- Successful calculation ---
-
-  it('renders results after single-fund calculation', async () => {
-    globalThis.fetch = mockFetch(fundsResponse, { VFIAX: calculationResponse })
-    render(<App />)
+    await userEvent.click(screen.getByRole('link', { name: /settings/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
-    })
-
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
-
-    await waitFor(() => {
-      expect(screen.getByText('Vanguard 500 Index Fund')).toBeInTheDocument()
-    })
-
-    expect(screen.getAllByText('$52,345.67').length).toBeGreaterThanOrEqual(1)
-  })
-
-  // --- Error states ---
-
-  it('shows error banner when all calculations fail', async () => {
-    globalThis.fetch = mockFetch(fundsResponse, new Error('External API failed'))
-    render(<App />)
-
-    await waitFor(() => {
-      expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
-    })
-
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
-
-    await waitFor(() => {
-      expect(screen.getByText('External API failed')).toBeInTheDocument()
+      expect(screen.getByText('Application Settings')).toBeInTheDocument()
     })
   })
 })

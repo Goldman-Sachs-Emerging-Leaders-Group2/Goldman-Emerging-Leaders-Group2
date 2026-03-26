@@ -6,8 +6,9 @@ const StatCard = ({
   valueClassName,
   isLoading,
   hasError,
+  className,
 }) => {
-  const cardClass = `stat-card${isLoading ? ' loading' : ''}${hasError ? ' error' : ''}`
+  const cardClass = `stat-card${isLoading ? ' loading' : ''}${hasError ? ' error' : ''}${className ? ` ${className}` : ''}`
 
   const renderContent = () => {
     if (hasError) {

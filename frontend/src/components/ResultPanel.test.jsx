@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react'
 import ResultPanel from './ResultPanel'
 
 const sampleResult = {
-  fundName: 'Vanguard 500 Index Fund',
+  assetName: 'Vanguard 500 Index Fund',
+  assetType: 'MUTUAL_FUND',
   futureValue: 52345.67,
   initialInvestment: 10000,
   years: 10,
@@ -24,7 +25,7 @@ describe('ResultPanel', () => {
     expect(screen.getByText(/Calculating projected outcomes/)).toBeInTheDocument()
   })
 
-  it('renders single fund details with one result', () => {
+  it('renders single asset details with one result', () => {
     render(<ResultPanel results={{ VFIAX: sampleResult }} isCalculating={false} />)
     expect(screen.getByText('Vanguard 500 Index Fund')).toBeInTheDocument()
     expect(screen.getByText('$52,345.67')).toBeInTheDocument()
@@ -33,14 +34,14 @@ describe('ResultPanel', () => {
   it('renders comparison table with multiple results', () => {
     const results = {
       VFIAX: sampleResult,
-      FXAIX: { ...sampleResult, fundName: 'Fidelity 500', ticker: 'FXAIX', futureValue: 48000 },
+      SPY: { ...sampleResult, assetName: 'SPDR S&P 500 ETF', assetType: 'ETF', ticker: 'SPY', futureValue: 48000 },
     }
     render(<ResultPanel results={results} isCalculating={false} />)
     expect(screen.getByText('VFIAX')).toBeInTheDocument()
-    expect(screen.getByText('FXAIX')).toBeInTheDocument()
+    expect(screen.getByText('SPY')).toBeInTheDocument()
   })
 
-  it('renders all four breakdown rows for single fund', () => {
+  it('renders all four breakdown rows for single asset', () => {
     render(<ResultPanel results={{ VFIAX: sampleResult }} isCalculating={false} />)
     expect(screen.getByText('CAPM Return')).toBeInTheDocument()
     expect(screen.getByText('Expected Market Return')).toBeInTheDocument()
@@ -48,8 +49,8 @@ describe('ResultPanel', () => {
     expect(screen.getByText('Beta')).toBeInTheDocument()
   })
 
-  it('shows "Unknown Fund" when fundName is missing', () => {
-    render(<ResultPanel results={{ VFIAX: { ...sampleResult, fundName: '' } }} isCalculating={false} />)
-    expect(screen.getByText('Unknown Fund')).toBeInTheDocument()
+  it('shows "Unknown Asset" when assetName is missing', () => {
+    render(<ResultPanel results={{ VFIAX: { ...sampleResult, assetName: '' } }} isCalculating={false} />)
+    expect(screen.getByText('Unknown Asset')).toBeInTheDocument()
   })
 })

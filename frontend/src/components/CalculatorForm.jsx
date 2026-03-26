@@ -1,17 +1,22 @@
 import { formatPercent } from '../utils/formatters'
-import { getFundColor } from '../utils/colors'
+import { getAssetColor } from '../utils/colors'
 
 const MAX_SELECTIONS = 5
 
+const TYPE_LABELS = {
+  MUTUAL_FUND: 'MF',
+  ETF: 'ETF',
+}
+
 const CalculatorForm = ({
-  funds,
+  assets,
   form,
   errors,
   onChange,
   onToggleTicker,
   onSubmit,
   isCalculating,
-  isLoadingFunds,
+  isLoadingAssets,
   riskFreeRate,
 }) => {
   const atMax = form.tickers.length >= MAX_SELECTIONS
@@ -19,30 +24,31 @@ const CalculatorForm = ({
   return (
     <form className="calculator-form" onSubmit={onSubmit} noValidate>
       <div className="field-group">
-        <label>Mutual Funds <span className="field-hint">({form.tickers.length}/{MAX_SELECTIONS})</span></label>
-        <div className="fund-checkbox-list">
-          {funds.length === 0 && (
-            <p className="fund-checkbox-empty">No funds available</p>
+        <label>Assets <span className="field-hint">({form.tickers.length}/{MAX_SELECTIONS})</span></label>
+        <div className="asset-checkbox-list">
+          {assets.length === 0 && (
+            <p className="asset-checkbox-empty">No assets available</p>
           )}
-          {funds.map((fund, index) => {
-            const checked = form.tickers.includes(fund.ticker)
+          {assets.map((asset) => {
+            const checked = form.tickers.includes(asset.ticker)
             return (
               <label
-                key={fund.ticker}
-                className={`fund-checkbox-item${checked ? ' checked' : ''}`}
+                key={asset.ticker}
+                className={`asset-checkbox-item${checked ? ' checked' : ''}`}
               >
                 <input
                   type="checkbox"
                   checked={checked}
-                  onChange={() => onToggleTicker(fund.ticker)}
-                  disabled={isLoadingFunds || isCalculating || (!checked && atMax)}
+                  onChange={() => onToggleTicker(asset.ticker)}
+                  disabled={isLoadingAssets || isCalculating || (!checked && atMax)}
                 />
                 <span
-                  className="fund-checkbox-color"
-                  style={{ backgroundColor: checked ? getFundColor(form.tickers.indexOf(fund.ticker)) : '#2a3f54' }}
+                  className="asset-checkbox-color"
+                  style={{ backgroundColor: checked ? getAssetColor(form.tickers.indexOf(asset.ticker)) : '#2a3f54' }}
                 />
-                <span className="fund-checkbox-label">
-                  {fund.ticker} — {fund.name} ({formatPercent(fund.expectedAnnualReturn)})
+                <span className="asset-type-badge">{TYPE_LABELS[asset.type] || asset.type}</span>
+                <span className="asset-checkbox-label">
+                  {asset.ticker} — {asset.name} ({formatPercent(asset.expectedAnnualReturn)})
                 </span>
               </label>
             )
@@ -102,7 +108,7 @@ const CalculatorForm = ({
       <button
         type="submit"
         className="calculate-button"
-        disabled={isCalculating || isLoadingFunds || funds.length === 0}
+        disabled={isCalculating || isLoadingAssets || assets.length === 0}
       >
         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
