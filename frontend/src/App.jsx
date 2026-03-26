@@ -1,450 +1,298 @@
-import { useEffect, useMemo, useState } from 'react'
-import './App.css'
 import CalculatorForm from './components/CalculatorForm'
 import GrowthChart from './components/GrowthChart'
 import InsightsPanel from './components/InsightsPanel'
 import ResultPanel from './components/ResultPanel'
 import PieBreakdown from './components/PieBreakdown'
-import { calculateMultipleFunds, getMutualFunds } from './api/client'
-import { formatCurrency, formatPercent } from './utils/formatters'
-import { generateNarrative, generateComparisonNarrative } from './utils/narrative'
+import Sidebar from './components/Sidebar'
+import InvestmentHistory from './components/InvestmentHistory'
+import PageHeader from './components/PageHeader'
+import SummaryStats from './components/SummaryStats'
+import SaveBar from './components/SaveBar'
+import FormSummary from './components/FormSummary'
 
-const REQUIRED_FIELDS = ['ticker', 'futureValue', 'capmReturn', 'expectedMarketReturn', 'beta', 'fundName', 'years', 'initialInvestment', 'riskFreeRate', 'totalContributed']
+import { useTheme } from './hooks/useTheme'
+import { useViewState } from './hooks/useViewState'
+import { useFundForm } from './hooks/useFundForm'
+import { useCalculation } from './hooks/useCalculation'
+import { useInvestmentHistory } from './hooks/useInvestmentHistory'
 
-const smoothScrollTo = (element, duration = 1200) => {
-  if (!element) return
-  const targetY = element.getBoundingClientRect().top + window.scrollY - 20
-  const startY = window.scrollY
-  const diff = targetY - startY
-  if (Math.abs(diff) < 5) return
-  const startTime = performance.now()
+// Staggered reveal timing for results section children
+const reveal = (delay) => ({ animation: `revealUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both` })
 
-  const step = (now) => {
-    const elapsed = now - startTime
-    const progress = Math.min(elapsed / duration, 1)
-    const eased = 1 - Math.pow(1 - progress, 4)
-    window.scrollTo(0, startY + diff * eased)
-    if (progress < 1) requestAnimationFrame(step)
-  }
-  requestAnimationFrame(step)
-}
+// Reusable style constants
+const card = 'rounded-xl p-5 transition-colors duration-200 hover:border-[var(--accent)]'
+const cardStyle = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--card-shadow)' }
+const cardHeader = 'flex items-center justify-between mb-4'
+const cardTitle = 'text-base font-semibold m-0'
+const badgeBase = 'text-[0.7rem] font-semibold px-2.5 py-0.5 rounded-full border'
 
 function App() {
-  const [funds, setFunds] = useState([])
-  const [form, setForm] = useState({
-    tickers: [],
-    investment: '10000',
-    years: '10',
-  })
-  const [fieldErrors, setFieldErrors] = useState({})
-  const [results, setResults] = useState({})
-  const [lastCalculatedForm, setLastCalculatedForm] = useState(null)
-  const [isLoadingFunds, setIsLoadingFunds] = useState(true)
-  const [isCalculating, setIsCalculating] = useState(false)
-  const [loadError, setLoadError] = useState('')
-  const [calculationError, setCalculationError] = useState('')
-  const [goalAmount, setGoalAmount] = useState('')
-  const [monthlyContribution, setMonthlyContribution] = useState('0')
-  const [riskTolerance, setRiskTolerance] = useState(5)
-  const [theme, setTheme] = useState(() => localStorage.getItem('gs-theme') || 'light')
-  const [formCollapsed, setFormCollapsed] = useState(false)
-  const [customTickers, setCustomTickers] = useState([])
-
-  const handleAddCustomTicker = (ticker) => {
-    const t = ticker.toUpperCase()
-    if (customTickers.includes(t) || form.tickers.includes(t)) return
-    setCustomTickers(prev => [...prev, t])
-    handleToggleTicker(t)
-  }
-
-  const handleRemoveCustomTicker = (ticker) => {
-    setCustomTickers(prev => prev.filter(t => t !== ticker))
-    if (form.tickers.includes(ticker)) {
-      handleToggleTicker(ticker)
-    }
-  }
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('gs-theme', theme)
-  }, [theme])
-
-  const resultTickers = Object.keys(results)
-  const resultCount = resultTickers.length
-  const hasResults = resultCount > 0
-  const isMulti = resultCount > 1
-  const primaryResult = hasResults ? results[resultTickers[0]] : null
-
-  const bestResult = useMemo(() => {
-    if (!hasResults) return null
-    if (!isMulti) return primaryResult
-    return Object.values(results).reduce((best, r) =>
-      r.futureValue > best.futureValue ? r : best,
-    )
-  }, [results, hasResults, isMulti, primaryResult])
-
-  const bestCapmResult = useMemo(() => {
-    if (!hasResults) return null
-    return Object.values(results).reduce((best, r) =>
-      r.capmReturn > best.capmReturn ? r : best,
-    )
-  }, [results, hasResults])
-
-  useEffect(() => {
-    const loadFunds = async () => {
-      setIsLoadingFunds(true)
-      setLoadError('')
-
-      try {
-        const data = await getMutualFunds()
-        setFunds(data)
-
-        if (data.length > 0) {
-          setForm((previous) => ({
-            ...previous,
-            tickers: [data[0].ticker],
-          }))
-        }
-      } catch (error) {
-        setLoadError(error.message || 'Unable to load mutual funds.')
-      } finally {
-        setIsLoadingFunds(false)
-      }
-    }
-
-    loadFunds()
-  }, [])
-
-  const validateForm = () => {
-    const errors = {}
-
-    if (form.tickers.length === 0) {
-      errors.tickers = 'Please select at least one mutual fund.'
-    }
-
-    const parsedInvestment = Number(form.investment)
-    if (!Number.isFinite(parsedInvestment) || parsedInvestment <= 0) {
-      errors.investment = 'Investment must be greater than 0.'
-    }
-
-    const parsedYears = Number(form.years)
-    if (!Number.isInteger(parsedYears) || parsedYears < 0 || parsedYears > 100) {
-      errors.years = 'Years must be an integer from 0 to 100.'
-    }
-
-    return errors
-  }
-
-  const handleChange = (event) => {
-    const { name, value } = event.target
-
-    setForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }))
-
-    setFieldErrors((previous) => ({
-      ...previous,
-      [name]: '',
-    }))
-    setCalculationError('')
-  }
-
-  const handleToggleTicker = (ticker) => {
-    setForm((previous) => {
-      const exists = previous.tickers.includes(ticker)
-      return {
-        ...previous,
-        tickers: exists
-          ? previous.tickers.filter((t) => t !== ticker)
-          : [...previous.tickers, ticker],
-      }
-    })
-
-    setFieldErrors((previous) => ({ ...previous, tickers: '' }))
-    setCalculationError('')
-  }
+  const { theme, toggleTheme } = useTheme()
+  const { dashboardMode, activeView, enterDashboard, navigateTo, exitDashboard } = useViewState()
+  const form = useFundForm()
+  const calc = useCalculation()
+  const history = useInvestmentHistory((msg) => calc.setCalculationError(msg))
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    const errors = form.validateForm()
+    if (Object.keys(errors).length > 0) return
 
-    const errors = validateForm()
-    setFieldErrors(errors)
+    const success = await calc.calculate(
+      form.form, form.monthlyContribution, form.customTickers,
+      (failedSet) => form.cleanupFailedTickers(failedSet)
+    )
 
-    if (Object.keys(errors).length > 0) {
-      return
-    }
-
-    setCalculationError('')
-    setIsCalculating(true)
-
-    try {
-      const { results: newResults, errors: apiErrors } = await calculateMultipleFunds({
-        tickers: form.tickers,
-        investment: Number(form.investment),
-        years: Number(form.years),
-        monthlyContribution: Number(monthlyContribution) || 0,
-      })
-
-      for (const [ticker, response] of Object.entries(newResults)) {
-        const missing = REQUIRED_FIELDS.filter((f) => response[f] == null)
-        if (missing.length > 0) {
-          delete newResults[ticker]
-          apiErrors[ticker] = 'Received incomplete data from the server.'
-        }
-      }
-
-      if (Object.keys(newResults).length === 0) {
-        const firstError = Object.values(apiErrors)[0] || 'All calculations failed.'
-        throw new Error(firstError)
-      }
-
-      setResults(newResults)
-      setFormCollapsed(true)
-
-      if (Object.keys(apiErrors).length > 0) {
-        const failedList = Object.entries(apiErrors)
-          .map(([t, msg]) => `${t}: ${msg.includes('beta') || msg.includes('reach') ? 'ticker not found or unavailable' : msg}`)
-          .join('; ')
-        setCalculationError(failedList)
-
-        // Clean up failed custom tickers
-        const failedSet = new Set(Object.keys(apiErrors))
-        setCustomTickers(prev => prev.filter(t => !failedSet.has(t)))
-        setForm(prev => ({
-          ...prev,
-          tickers: prev.tickers.filter(t => !failedSet.has(t) || !customTickers.includes(t)),
-        }))
-      }
-
-      setLastCalculatedForm({
-        tickers: [...form.tickers].sort(),
-        investment: Number(form.investment),
-        years: Number(form.years),
-      })
-
-      setTimeout(() => {
-        smoothScrollTo(document.querySelector('.form-summary'))
-      }, 700)
-    } catch (error) {
-      setCalculationError(error.message || 'Unable to calculate future value.')
-    } finally {
-      setIsCalculating(false)
+    if (success) {
+      form.setFormCollapsed(true)
+      enterDashboard('results')
     }
   }
 
-  const isStale = useMemo(() => {
-    if (!hasResults || !lastCalculatedForm) {
-      return false
-    }
+  const handleNewAnalysis = () => {
+    exitDashboard()
+    form.setFormCollapsed(false)
+    calc.reset()
+    window.scrollTo(0, 0)
+  }
 
-    return (
-      JSON.stringify([...form.tickers].sort()) !== JSON.stringify(lastCalculatedForm.tickers) ||
-      Number(form.investment) !== lastCalculatedForm.investment ||
-      Number(form.years) !== lastCalculatedForm.years
-    )
-  }, [form, lastCalculatedForm, hasResults])
+  const handleRerun = (inv) => {
+    form.populateFrom(inv)
+    navigateTo('results')
+    window.scrollTo(0, 0)
+  }
 
-  const riskFreeRate = primaryResult?.riskFreeRate ?? null
+  const handleSave = () => history.saveResults(calc.results)
 
-  // Results narrative
-  const narrative = useMemo(() => {
-    if (!hasResults) return null
-    if (isMulti) return generateComparisonNarrative(results, goalAmount, riskTolerance)
-    return generateNarrative(primaryResult, goalAmount, riskTolerance)
-  }, [results, hasResults, isMulti, primaryResult, goalAmount, riskTolerance])
+  const isStale = calc.isStale(form.form)
+  const narrative = calc.getNarrative(form.goalAmount, form.riskTolerance)
 
-  return (
-    <div className="app">
-      {/* Header */}
-      <header className="gs-header">
-        <div className="gs-header-inner">
-          <div className="gs-header-brand">
-            <div className="gs-logo-mark">GS</div>
-            <div className="gs-header-text">
-              <span className="gs-header-title">Goldman Sachs</span>
-              <span className="gs-header-subtitle">Emerging Leaders Program</span>
-            </div>
-          </div>
-          <div className="gs-header-right">
-            <button
-              className="theme-toggle"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              aria-label="Toggle theme"
-              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
-            >
-              {theme === 'light' ? (
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </svg>
-              )}
-            </button>
-            <span className="gs-header-badge">Group 2</span>
-          </div>
+  // Alerts
+  const alerts = (
+    <>
+      {form.loadError && (
+        <div className="max-w-[1200px] mx-auto mb-4 px-8 py-3 rounded-xl text-sm font-medium bg-red-600/[0.08] border border-red-600/20" style={{ color: 'var(--error)' }}>
+          {form.loadError}
         </div>
-      </header>
-
-      {/* Hero */}
-      <section className="gs-hero">
-        <h1>Mutual Fund Investment Calculator</h1>
-        <p>Select funds, enter your investment, and see projected returns using the Capital Asset Pricing Model.</p>
-      </section>
-
-      {/* Alerts */}
-      {loadError && (
-        <div className="gs-alert gs-alert-error">{loadError}</div>
       )}
-      {calculationError && (
-        <div className="gs-alert gs-alert-error">{calculationError}</div>
+      {calc.calculationError && (
+        <div className="max-w-[1200px] mx-auto mb-4 px-8 py-3 rounded-xl text-sm font-medium bg-red-600/[0.08] border border-red-600/20" style={{ color: 'var(--error)' }}>
+          {calc.calculationError}
+        </div>
       )}
-      {isLoadingFunds && (
-        <div className="gs-alert gs-alert-info">Loading mutual fund data…</div>
+      {form.isLoadingFunds && (
+        <div className="max-w-[1200px] mx-auto mb-4 px-8 py-3 rounded-xl text-sm font-medium" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-secondary)' }}>
+          Loading mutual fund data…
+        </div>
       )}
+    </>
+  )
 
-      {/* Main Content */}
-      <main className="gs-main">
-        {/* Calculator */}
-        <section className="gs-card">
-          {/* Summary bar — visible when collapsed */}
-          <div className={`form-summary-wrapper${formCollapsed ? ' form-summary-wrapper--visible' : ''}`}>
-            {hasResults && (
-              <div
-                className="form-summary"
-                onClick={() => setFormCollapsed(false)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === 'Enter' && setFormCollapsed(false)}
-              >
-                <div className="form-summary__params">
-                  <span className="form-summary__tag">{resultTickers.join(', ')}</span>
-                  <span className="form-summary__sep" aria-hidden="true" />
-                  <span className="form-summary__tag">${Number(form.investment).toLocaleString()}</span>
-                  <span className="form-summary__sep" aria-hidden="true" />
-                  <span className="form-summary__tag">{form.years} years</span>
-                </div>
-                <button
-                  className="form-summary__modify"
-                  onClick={(e) => { e.stopPropagation(); setFormCollapsed(false) }}
-                >
-                  Modify
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Full form — visible when expanded */}
-          <div className={`form-full-wrapper${formCollapsed ? ' form-full-wrapper--hidden' : ''}`}>
-            <div className="gs-card-header">
-              <h2>Investment Parameters</h2>
-              <span className={`gs-badge ${isCalculating ? 'calculating' : 'ready'}`}>
-                {isCalculating ? 'Calculating…' : 'Ready'}
-              </span>
-            </div>
-            <CalculatorForm
-              funds={funds}
-              form={form}
-              errors={fieldErrors}
-              onChange={handleChange}
-              onToggleTicker={handleToggleTicker}
-              onSubmit={handleSubmit}
-              isCalculating={isCalculating}
-              isLoadingFunds={isLoadingFunds}
-              goalAmount={goalAmount}
-              onGoalChange={(e) => {
-                const val = e.target.value
-                setGoalAmount(val === '' ? '' : String(Math.max(0, Number(val) || 0)))
-              }}
-              monthlyContribution={monthlyContribution}
-              onMonthlyChange={(e) => setMonthlyContribution(e.target.value)}
-              riskTolerance={riskTolerance}
-              onRiskToleranceChange={(e) => setRiskTolerance(Number(e.target.value))}
-              customTickers={customTickers}
-              onAddCustomTicker={handleAddCustomTicker}
-              onRemoveCustomTicker={handleRemoveCustomTicker}
+  // Calculator form card
+  const calculatorCard = (
+    <section className={card} style={cardStyle}>
+      {/* Summary bar — visible when collapsed */}
+      <div className={`overflow-hidden transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${form.formCollapsed ? 'max-h-20 opacity-100 pointer-events-auto' : 'max-h-0 opacity-0 pointer-events-none'}`}>
+        {calc.hasResults && (
+          <div data-form-summary>
+            <FormSummary
+              tickers={calc.resultTickers}
+              investment={form.form.investment}
+              years={form.form.years}
+              onExpand={() => form.setFormCollapsed(false)}
             />
           </div>
-        </section>
-
-        {/* Results — reveals after calculation */}
-        {hasResults && (
-          <section className="results-section">
-            {narrative && (
-              <p className="results-narrative">{narrative}</p>
-            )}
-
-            <div className="summary-stats" id="results-section">
-              <div className="stat-card">
-                <span className="stat-card__label">Best Future Value</span>
-                <span className="stat-card__value">{formatCurrency(bestResult.futureValue)}</span>
-                <span className="stat-card__sub">{bestResult.fundName}</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__label">Best CAPM Return</span>
-                <span className="stat-card__value">{formatPercent(bestCapmResult.capmReturn)}</span>
-                <span className="stat-card__sub">{bestCapmResult.fundName}</span>
-              </div>
-              <div className="stat-card">
-                <span className="stat-card__label">Funds Compared</span>
-                <span className="stat-card__value">{resultCount}</span>
-                <span className="stat-card__sub">{resultCount === 1 ? 'single fund' : 'multi-fund comparison'}</span>
-              </div>
-            </div>
-
-            <div className="results-grid">
-              <div className="gs-card">
-                <div className="gs-card-header">
-                  <h2>Projected Results</h2>
-                  <div className="gs-badge-group">
-                    {isStale && <span className="gs-badge stale">Stale</span>}
-                    {isCalculating && <span className="gs-badge calculating">Updating…</span>}
-                  </div>
-                </div>
-                <ResultPanel results={results} isCalculating={isCalculating} isStale={isStale} riskTolerance={riskTolerance} />
-              </div>
-
-              <div className="gs-card">
-                <div className="gs-card-header">
-                  <h2>Investment Breakdown</h2>
-                </div>
-                <PieBreakdown result={bestResult} isMulti={isMulti} />
-              </div>
-            </div>
-
-            <div className="gs-card">
-              <div className="gs-card-header">
-                <h2>Projected Growth</h2>
-                {isStale && <span className="gs-badge stale">Stale</span>}
-              </div>
-              <GrowthChart results={results} isCalculating={isCalculating} goalAmount={goalAmount} />
-            </div>
-
-            <div className="gs-card">
-              <div className="gs-card-header">
-                <h2>Investment Insights</h2>
-                {isStale && <span className="gs-badge stale">Stale</span>}
-              </div>
-              <InsightsPanel results={results} isCalculating={isCalculating} riskTolerance={riskTolerance} />
-            </div>
-          </section>
         )}
-      </main>
+      </div>
 
-      {/* Footer */}
-      <footer className="gs-footer">
-        <div className="gs-footer-divider" />
-        <p>Goldman Sachs Emerging Leaders Program — Group 2</p>
-        <p className="gs-footer-attribution">
-          Market data from Newton Analytics and Yahoo Finance. CAPM projections are estimates, not financial advice.
+      {/* Full form — visible when expanded */}
+      <div className={`overflow-hidden transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${form.formCollapsed ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-[800px] opacity-100'}`}>
+        <div className={cardHeader}>
+          <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Investment Parameters</h2>
+          <span className={`${badgeBase} ${calc.isCalculating
+            ? 'bg-[#00244D]/[0.08] border-[#B5985A]/30'
+            : 'bg-emerald-600/10 border-emerald-600/20'
+          }`} style={{ color: calc.isCalculating ? 'var(--accent)' : 'var(--success)' }}>
+            {calc.isCalculating ? 'Calculating…' : 'Ready'}
+          </span>
+        </div>
+        <CalculatorForm
+          funds={form.funds}
+          form={form.form}
+          errors={form.fieldErrors}
+          onChange={form.handleChange}
+          onToggleTicker={form.handleToggleTicker}
+          onSubmit={handleSubmit}
+          isCalculating={calc.isCalculating}
+          isLoadingFunds={form.isLoadingFunds}
+          goalAmount={form.goalAmount}
+          onGoalChange={form.handleGoalChange}
+          monthlyContribution={form.monthlyContribution}
+          onMonthlyChange={form.handleMonthlyChange}
+          riskTolerance={form.riskTolerance}
+          onRiskToleranceChange={form.handleRiskToleranceChange}
+          customTickers={form.customTickers}
+          onAddCustomTicker={form.handleAddCustomTicker}
+          onRemoveCustomTicker={form.handleRemoveCustomTicker}
+        />
+      </div>
+    </section>
+  )
+
+  // Results view — staggered reveal animation on each section
+  const resultsView = calc.hasResults && (
+    <section className="mt-6 flex flex-col gap-6">
+      {narrative && (
+        <p className="text-[0.95rem] leading-relaxed" style={{ color: 'var(--text-secondary)', ...reveal(0.25) }}>
+          {narrative}
         </p>
-      </footer>
+      )}
+
+      <div style={reveal(0.45)}>
+        <SummaryStats
+          bestResult={calc.bestResult}
+          bestCapmResult={calc.bestCapmResult}
+          resultCount={calc.resultCount}
+        />
+      </div>
+
+      <div style={reveal(0.6)}>
+        <SaveBar
+          label={history.saveLabel}
+          onLabelChange={history.setSaveLabel}
+          onSave={handleSave}
+          saveStatus={history.saveStatus}
+          resultCount={calc.resultCount}
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={reveal(0.75)}>
+        <div className={card} style={cardStyle}>
+          <div className={cardHeader}>
+            <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Projected Results</h2>
+            <div className="flex items-center gap-1.5">
+              {isStale && (
+                <span className={`${badgeBase} bg-amber-600/10 border-amber-600/20`} style={{ color: 'var(--warning)' }}>Stale</span>
+              )}
+              {calc.isCalculating && (
+                <span className={`${badgeBase} bg-[#00244D]/[0.08] border-[#B5985A]/30`} style={{ color: 'var(--accent)' }}>Updating…</span>
+              )}
+            </div>
+          </div>
+          <ResultPanel results={calc.results} isCalculating={calc.isCalculating} isStale={isStale} riskTolerance={form.riskTolerance} />
+        </div>
+        <div className={card} style={cardStyle}>
+          <div className={cardHeader}>
+            <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Investment Breakdown</h2>
+          </div>
+          <PieBreakdown result={calc.bestResult} isMulti={calc.isMulti} />
+        </div>
+      </div>
+
+      <div className={card} style={{ ...cardStyle, ...reveal(0.95) }}>
+        <div className={cardHeader}>
+          <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Projected Growth</h2>
+          {isStale && (
+            <span className={`${badgeBase} bg-amber-600/10 border-amber-600/20`} style={{ color: 'var(--warning)' }}>Stale</span>
+          )}
+        </div>
+        <GrowthChart results={calc.results} isCalculating={calc.isCalculating} goalAmount={form.goalAmount} />
+      </div>
+
+      <div className={card} style={{ ...cardStyle, ...reveal(1.15) }}>
+        <div className={cardHeader}>
+          <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Investment Insights</h2>
+          {isStale && (
+            <span className={`${badgeBase} bg-amber-600/10 border-amber-600/20`} style={{ color: 'var(--warning)' }}>Stale</span>
+          )}
+        </div>
+        <InsightsPanel results={calc.results} isCalculating={calc.isCalculating} riskTolerance={form.riskTolerance} />
+      </div>
+    </section>
+  )
+
+  // History view
+  const historyView = (
+    <section className="animate-fade-in-up">
+      <div className={card} style={cardStyle}>
+        <div className={cardHeader}>
+          <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Saved Investments</h2>
+          {history.savedInvestments.length > 0 && (
+            <span className={`${badgeBase} bg-emerald-600/10 border-emerald-600/20`} style={{ color: 'var(--success)' }}>
+              {history.savedInvestments.length} saved
+            </span>
+          )}
+        </div>
+        <InvestmentHistory
+          investments={history.savedInvestments}
+          onDelete={history.removeInvestment}
+          onRerun={handleRerun}
+          isLoading={history.isLoadingHistory}
+        />
+      </div>
+    </section>
+  )
+
+  return (
+    <div className="min-h-screen flex flex-col transition-colors duration-300" style={{ background: 'var(--bg)', color: 'var(--text-primary)' }}>
+      <PageHeader
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onLogoClick={dashboardMode ? handleNewAnalysis : undefined}
+      />
+
+      {!dashboardMode ? (
+        <>
+          {/* Entry Mode */}
+          <section className="text-center pt-10 pb-5 px-8 animate-fade-in-up">
+            <h1 className="text-3xl max-md:text-2xl max-[480px]:text-xl font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+              Mutual Fund Investment Calculator
+            </h1>
+            <p className="text-base max-w-[600px] mx-auto" style={{ color: 'var(--text-secondary)' }}>
+              Select funds, enter your investment, and see projected returns using the Capital Asset Pricing Model.
+            </p>
+          </section>
+
+          {alerts}
+
+          <main className="max-w-[1200px] mx-auto px-8 max-md:px-4 pb-12 w-full flex-1">
+            {calculatorCard}
+            {history.savedInvestments.length > 0 && (
+              <button
+                className="block mx-auto mt-6 px-6 py-3 bg-transparent border border-[var(--card-border)] rounded-xl text-sm cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--accent)] hover:bg-[rgba(181,152,90,0.06)]"
+                style={{ color: 'var(--accent)' }}
+                onClick={() => enterDashboard('history')}
+              >
+                View saved investments ({history.savedInvestments.length}) →
+              </button>
+            )}
+          </main>
+
+          <footer className="py-6 px-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
+            <div className="h-px mx-auto max-w-[1200px] mb-4" style={{ background: 'var(--card-border)' }} />
+            <p className="m-0">Goldman Sachs Emerging Leaders Program — Group 2</p>
+            <p className="text-xs mt-1 opacity-70 m-0">
+              Market data from Newton Analytics and Yahoo Finance. CAPM projections are estimates, not financial advice.
+            </p>
+          </footer>
+        </>
+      ) : (
+        <>
+          {/* Dashboard Mode */}
+          <Sidebar
+            activeView={activeView}
+            onNavigate={navigateTo}
+            savedCount={history.savedInvestments.length}
+            onNewAnalysis={handleNewAnalysis}
+          />
+          <main className="ml-[210px] min-w-0 px-16 py-8 animate-[contentFadeIn_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_both]">
+            {alerts}
+            {(activeView === 'results' || !form.formCollapsed) && calculatorCard}
+            {activeView === 'results' && resultsView}
+            {activeView === 'history' && historyView}
+          </main>
+        </>
+      )}
     </div>
   )
 }
