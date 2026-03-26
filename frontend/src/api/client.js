@@ -87,3 +87,35 @@ export const calculateMultipleFunds = async ({ tickers, investment, years, month
 
   return { results, errors }
 }
+
+export const getInvestments = async () => {
+  const response = await fetch('/api/investments')
+
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+
+  return response.json()
+}
+
+export const saveInvestment = async (data) => {
+  const response = await fetch('/api/investments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+
+  return response.json()
+}
+
+export const deleteInvestment = async (id) => {
+  const response = await fetch(`/api/investments/${id}`, { method: 'DELETE' })
+
+  if (!response.ok) {
+    throw await parseError(response)
+  }
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { getMutualFunds, calculateFutureValue, calculateMultipleFunds } from './client'
+import { getMutualFunds, calculateFutureValue, calculateMultipleFunds, getInvestments, saveInvestment, deleteInvestment } from './client'
 
 beforeEach(() => {
   vi.restoreAllMocks()
@@ -124,5 +124,77 @@ describe('calculateMultipleFunds', () => {
 
     expect(results.VFIAX).toBeDefined()
     expect(errors.BAD).toBeDefined()
+  })
+})
+
+describe('getInvestments', () => {
+  it('returns parsed array on success', async () => {
+    const data = [{ id: 1, ticker: 'VFIAX', futureValue: 50000 }]
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(data),
+    })
+
+    const result = await getInvestments()
+    expect(result).toEqual(data)
+    expect(fetch).toHaveBeenCalledWith('/api/investments')
+  })
+
+  it('throws on HTTP error', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: () => Promise.resolve({ message: 'DB error' }),
+    })
+
+    await expect(getInvestments()).rejects.toThrow('DB error')
+  })
+})
+
+describe('saveInvestment', () => {
+  it('sends POST with JSON body and returns saved entity', async () => {
+    const input = { ticker: 'VFIAX', initialInvestment: 10000 }
+    const saved = { ...input, id: 1, savedAt: '2026-03-25T12:00:00' }
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(saved),
+    })
+
+    const result = await saveInvestment(input)
+    expect(result).toEqual(saved)
+    expect(fetch).toHaveBeenCalledWith('/api/investments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+    })
+  })
+
+  it('throws on HTTP error', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: () => Promise.resolve({ message: 'ticker is required.' }),
+    })
+
+    await expect(saveInvestment({})).rejects.toThrow('ticker is required.')
+  })
+})
+
+describe('deleteInvestment', () => {
+  it('sends DELETE to correct URL', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true })
+
+    await deleteInvestment(42)
+    expect(fetch).toHaveBeenCalledWith('/api/investments/42', { method: 'DELETE' })
+  })
+
+  it('throws on HTTP error', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: () => Promise.resolve({ message: 'Not found' }),
+    })
+
+    await expect(deleteInvestment(999)).rejects.toThrow('Not found')
   })
 })
