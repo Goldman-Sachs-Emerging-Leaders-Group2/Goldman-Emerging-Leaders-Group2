@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 import { formatCurrency } from '../utils/formatters'
 
-// Short names for the donut center (space-constrained). Full names stay in the legend.
 const SHORT_NAMES = {
   'Initial Investment': 'Initial',
   'Your Investment': 'Invested',
@@ -50,9 +49,11 @@ const PieBreakdown = ({ result, isMulti }) => {
     COLORS = ['var(--navy, #00244D)', 'var(--accent, #B5985A)']
   }
 
-  const growthPercent = (result.futureValue > 0 && totalContributed > 0)
-    ? Math.round((Math.max(0, change) / result.futureValue) * 100)
-    : 0
+  const divisor = isLoss ? totalContributed : result.futureValue
+  const hoveredData = activeIndex !== null ? data[activeIndex] : null
+  const hoveredPercent = activeIndex !== null && divisor > 0
+    ? Math.round((data[activeIndex].value / divisor) * 100)
+    : null
 
   const takeaway = isLoss
     ? `Your investment loses ${formatCurrency(Math.abs(multiplier))} for every $1 invested`
@@ -60,21 +61,18 @@ const PieBreakdown = ({ result, isMulti }) => {
       ? `You contribute ${formatCurrency(totalContributed)} total. The market adds ${formatCurrency(change)} on top.`
       : `For every $1 you invest, the market adds ${formatCurrency(multiplier)}`
 
-  const divisor = isLoss ? totalContributed : result.futureValue
-  const hoveredData = activeIndex !== null ? data[activeIndex] : null
-  const hoveredPercent = activeIndex !== null && divisor > 0
-    ? Math.round((data[activeIndex].value / divisor) * 100)
-    : null
-
   return (
-    <div className="pie-breakdown">
+    <div className="flex flex-col items-center gap-3">
       {isMulti && (
-        <div className="pie-fund-label">
-          <span className="pie-fund-badge">Top Performer</span>
-          <span className="pie-fund-name">{result.fundName}</span>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide bg-gold/15 text-gold border border-gold/25">
+            Top Performer
+          </span>
+          <span style={{ color: 'var(--text-primary)' }} className="font-medium">{result.fundName}</span>
         </div>
       )}
-      <div className="pie-chart-wrapper">
+
+      <div className="relative w-full">
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
             <Pie
@@ -92,39 +90,61 @@ const PieBreakdown = ({ result, isMulti }) => {
               animationDuration={800}
             >
               {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i]} />
+                <Cell
+                  key={i}
+                  fill={COLORS[i]}
+                  opacity={activeIndex === null ? 1 : activeIndex === i ? 1 : 0.4}
+                  stroke={activeIndex === i ? COLORS[i] : 'none'}
+                  strokeWidth={activeIndex === i ? 3 : 0}
+                  style={{
+                    filter: activeIndex === i ? 'brightness(1.2) drop-shadow(0 0 6px rgba(181,152,90,0.4))' : 'none',
+                    transition: 'opacity 0.2s ease, filter 0.2s ease',
+                    cursor: 'pointer',
+                  }}
+                />
               ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
-        <div className="pie-center-label">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none max-w-[110px] mx-auto">
           {hoveredData ? (
             <>
-              <span className="pie-center-amount">{formatCurrency(hoveredData.value)}</span>
-              <span className="pie-center-sub">{SHORT_NAMES[hoveredData.name] || hoveredData.name}{hoveredPercent !== null ? ` · ${hoveredPercent}%` : ''}</span>
+              <span className="text-lg font-bold text-center" style={{ color: 'var(--text-primary)' }}>{formatCurrency(hoveredData.value)}</span>
+              <span className="text-[0.65rem] text-center" style={{ color: 'var(--text-muted)' }}>{SHORT_NAMES[hoveredData.name] || hoveredData.name}{hoveredPercent !== null ? ` · ${hoveredPercent}%` : ''}</span>
             </>
           ) : (
             <>
-              <span className="pie-center-amount">{formatCurrency(result.futureValue)}</span>
-              <span className="pie-center-sub">After {years} years</span>
+              <span className="text-lg font-bold text-center" style={{ color: 'var(--text-primary)' }}>{formatCurrency(result.futureValue)}</span>
+              <span className="text-[0.65rem] text-center" style={{ color: 'var(--text-muted)' }}>After {years} years</span>
             </>
           )}
         </div>
       </div>
-      <div className="pie-legend">
-        {data.map((segment, i) => (
-          <div className="pie-legend-item" key={segment.name}>
-            <span className="pie-legend-dot" style={{ background: COLORS[i]?.replace('var(--navy, ', '').replace('var(--accent, ', '').replace(')', '') || COLORS[i] }} />
-            <span className={`pie-legend-label${isLoss && segment.name === 'Loss' ? ' pie-legend-label--loss' : ''}`}>
-              {segment.name}
-            </span>
-            <span className={`pie-legend-value${isLoss && segment.name === 'Loss' ? ' pie-legend-value--loss' : ''}`}>
-              {segment.name === 'Loss' ? `-${formatCurrency(segment.value)}` : formatCurrency(segment.value)}
-            </span>
-          </div>
-        ))}
+
+      <div className="flex flex-wrap justify-center gap-4 max-[480px]:flex-col max-[480px]:gap-2">
+        {data.map((segment, i) => {
+          const dotColor = COLORS[i]?.replace('var(--navy, ', '').replace('var(--accent, ', '').replace(')', '') || COLORS[i]
+          const isLossSegment = isLoss && segment.name === 'Loss'
+          return (
+            <div
+              className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded transition-all duration-200 cursor-pointer ${activeIndex === i ? 'bg-[rgba(181,152,90,0.08)] scale-[1.02]' : ''}`}
+              key={segment.name}
+              onMouseEnter={() => setActiveIndex(i)}
+              onMouseLeave={() => setActiveIndex(null)}
+            >
+              <span className="w-2 h-2 rounded-full shrink-0 transition-transform duration-200" style={{ background: dotColor, transform: activeIndex === i ? 'scale(1.4)' : 'scale(1)' }} />
+              <span className={isLossSegment ? 'text-orange-500' : ''} style={!isLossSegment ? { color: 'var(--text-secondary)' } : undefined}>
+                {segment.name}
+              </span>
+              <span className={`font-semibold ${isLossSegment ? 'text-orange-500' : ''}`} style={!isLossSegment ? { color: 'var(--text-primary)' } : undefined}>
+                {segment.name === 'Loss' ? `-${formatCurrency(segment.value)}` : formatCurrency(segment.value)}
+              </span>
+            </div>
+          )
+        })}
       </div>
-      <p className="pie-takeaway">{takeaway}</p>
+
+      <p className="text-xs text-center mt-1" style={{ color: 'var(--text-muted)' }}>{takeaway}</p>
     </div>
   )
 }

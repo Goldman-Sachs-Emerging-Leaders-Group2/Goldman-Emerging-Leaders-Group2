@@ -42,8 +42,8 @@ describe('InsightsPanel', () => {
     expect(screen.getByText('Lowest Risk')).toBeInTheDocument()
   })
 
-  it('applies updating class when calculating with results', () => {
-    const { container } = render(<InsightsPanel results={{ VFIAX: sampleResult }} isCalculating={true} />)
-    expect(container.querySelector('.insights-content')).toHaveClass('updating')
+  it('applies opacity when calculating with results', () => {
+    render(<InsightsPanel results={{ VFIAX: sampleResult }} isCalculating={true} />)
+    expect(screen.getByTestId('insights-content')).toHaveClass('opacity-50')
   })
 })

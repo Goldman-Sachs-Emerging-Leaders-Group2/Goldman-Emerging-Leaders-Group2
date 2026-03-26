@@ -25,12 +25,12 @@ describe('GrowthChart', () => {
   })
 
   it('renders chart container with single result', () => {
-    const { container } = render(<GrowthChart results={{ VFIAX: sampleResult }} isCalculating={false} />)
-    expect(container.querySelector('.chart-container')).toBeInTheDocument()
+    render(<GrowthChart results={{ VFIAX: sampleResult }} isCalculating={false} />)
+    expect(screen.getByTestId('chart-container')).toBeInTheDocument()
   })
 
-  it('applies updating class when calculating with results', () => {
-    const { container } = render(<GrowthChart results={{ VFIAX: sampleResult }} isCalculating={true} />)
-    expect(container.querySelector('.chart-container')).toHaveClass('updating')
+  it('applies opacity when calculating with results', () => {
+    render(<GrowthChart results={{ VFIAX: sampleResult }} isCalculating={true} />)
+    expect(screen.getByTestId('chart-container').className).toContain('opacity-50')
   })
 })

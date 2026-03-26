@@ -23,19 +23,19 @@ const EnhancedTooltip = ({ active, payload, label, initialInvestment, isSingle }
   if (!active || !payload?.length) return null
 
   return (
-    <div className="chart-tooltip">
-      <p className="chart-tooltip-label">Year {label}</p>
+    <div className="rounded-lg p-3 text-sm shadow-lg" style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--card-border, #E5E7EB)' }}>
+      <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Year {label}</p>
       {payload.map((entry) => {
         if (isSingle) {
           const gain = entry.value - initialInvestment
           return (
-            <p key={entry.dataKey} className="chart-tooltip-value" style={{ color: entry.color }}>
+            <p key={entry.dataKey} className="text-xs" style={{ color: entry.color }}>
               {formatCurrency(entry.value)} {gain >= 0 ? `(+${formatCurrency(gain)})` : `(${formatCurrency(gain)})`}
             </p>
           )
         }
         return (
-          <p key={entry.dataKey} className="chart-tooltip-value" style={{ color: entry.color }}>
+          <p key={entry.dataKey} className="text-xs" style={{ color: entry.color }}>
             {entry.dataKey}: {formatCurrency(entry.value)}
           </p>
         )
@@ -51,7 +51,7 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
 
   if (!hasResults) {
     return (
-      <div className="empty-state">
+      <div className="text-center py-10 border border-dashed rounded-lg" style={{ color: 'var(--text-muted)', borderColor: 'var(--card-border)' }}>
         <p>
           {isCalculating
             ? 'Calculating projection…'
@@ -78,7 +78,7 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
 
   return (
     <div
-      className={`chart-container${isCalculating ? ' updating' : ''}`}
+      data-testid="chart-container" className={`transition-opacity duration-300${isCalculating ? ' opacity-50' : ''}`}
       aria-label="Projected investment growth chart"
     >
       <ResponsiveContainer width="100%" height={320}>
