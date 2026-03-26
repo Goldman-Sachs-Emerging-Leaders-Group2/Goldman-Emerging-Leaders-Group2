@@ -61,7 +61,7 @@ while ! curl -sf "http://localhost:${BACKEND_PORT}/api/mutualfunds" > /dev/null 
     fi
     echo -n "."
     sleep 1
-    ((WAITED++))
+    WAITED=$((WAITED + 1))
 done
 echo ""
 echo -e "${GREEN}Backend ready.${NC}"

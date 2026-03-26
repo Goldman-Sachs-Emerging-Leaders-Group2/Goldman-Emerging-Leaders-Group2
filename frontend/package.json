@@ -12,8 +12,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "ag-grid-community": "^35.2.0",
-    "ag-grid-react": "^35.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-is": "^19.2.4",

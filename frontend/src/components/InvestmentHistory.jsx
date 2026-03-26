@@ -1,5 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
-import { AgGridReact } from 'ag-grid-react'
+import { useState } from 'react'
 import { formatCurrency, formatPercent } from '../utils/formatters'
 
 const timeAgo = (dateStr) => {
@@ -17,12 +16,12 @@ const timeAgo = (dateStr) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function ActionsRenderer({ data, onDelete, onRerun }) {
+function ActionButtons({ investment, onDelete, onRerun }) {
   const [confirming, setConfirming] = useState(false)
 
   const handleDelete = () => {
     if (confirming) {
-      onDelete(data.id)
+      onDelete(investment.id)
     } else {
       setConfirming(true)
       setTimeout(() => setConfirming(false), 2000)
@@ -30,22 +29,24 @@ function ActionsRenderer({ data, onDelete, onRerun }) {
   }
 
   return (
-    <div className="flex gap-1.5 items-center h-full">
+    <div className="flex gap-1.5 items-center justify-end">
       <button
-        className="bg-transparent border border-[var(--card-border,#E2E8F0)] rounded-md cursor-pointer text-sm px-2 py-0.5 text-[var(--text-secondary,#4A5568)] transition-all hover:bg-gold/10 hover:border-[var(--accent,#B5985A)] hover:text-[var(--accent,#B5985A)]"
-        onClick={() => onRerun(data)}
+        className="bg-transparent border border-[var(--card-border)] rounded-md text-sm px-2 py-0.5 transition-all duration-150 hover:border-[var(--accent)] hover:text-[var(--accent)]"
+        style={{ color: 'var(--text-muted)' }}
+        onClick={() => onRerun(investment)}
         title="Load these parameters into the calculator"
       >
         ↻
       </button>
       <button
-        className={`bg-transparent border rounded-md cursor-pointer px-2 py-0.5 transition-all ${
+        className={`bg-transparent border rounded-md px-2 py-0.5 transition-all duration-150 ${
           confirming
-            ? 'border-red-600 text-red-600 bg-red-600/[0.08] text-xs font-semibold'
-            : 'border-[var(--card-border,#E2E8F0)] text-[var(--text-secondary,#4A5568)] text-sm hover:bg-red-600/[0.08] hover:border-red-600 hover:text-red-600'
+            ? 'border-red-500 text-red-500 text-xs font-semibold'
+            : 'border-[var(--card-border)] text-sm hover:border-red-500 hover:text-red-500'
         }`}
+        style={!confirming ? { color: 'var(--text-muted)' } : undefined}
         onClick={handleDelete}
-        title={confirming ? 'Click again to confirm' : 'Delete this entry'}
+        title={confirming ? 'Click again to confirm' : 'Delete'}
       >
         {confirming ? 'Sure?' : '✕'}
       </button>
@@ -54,91 +55,75 @@ function ActionsRenderer({ data, onDelete, onRerun }) {
 }
 
 export default function InvestmentHistory({ investments, onDelete, onRerun, isLoading }) {
-  const columnDefs = useMemo(() => [
-    {
-      field: 'label',
-      headerName: 'Label',
-      width: 140,
-      valueFormatter: ({ data }) => data.label || data.fundName || '—',
-    },
-    { field: 'ticker', headerName: 'Fund', width: 85 },
-    {
-      field: 'initialInvestment',
-      headerName: 'Investment',
-      width: 120,
-      valueFormatter: ({ value }) => formatCurrency(value),
-    },
-    {
-      field: 'monthlyContribution',
-      headerName: 'Monthly',
-      width: 100,
-      valueFormatter: ({ value }) => formatCurrency(value),
-    },
-    { field: 'years', headerName: 'Years', width: 70 },
-    {
-      field: 'futureValue',
-      headerName: 'Future Value',
-      width: 130,
-      valueFormatter: ({ value }) => formatCurrency(value),
-      cellStyle: { fontWeight: 600, color: 'var(--accent, #B5985A)' },
-    },
-    {
-      field: 'capmReturn',
-      headerName: 'CAPM',
-      width: 90,
-      valueFormatter: ({ value }) => formatPercent(value),
-    },
-    {
-      field: 'savedAt',
-      headerName: 'Saved',
-      width: 110,
-      valueFormatter: ({ value }) => timeAgo(value),
-      sort: 'desc',
-    },
-    {
-      headerName: '',
-      width: 95,
-      sortable: false,
-      resizable: false,
-      cellRenderer: ActionsRenderer,
-      cellRendererParams: { onDelete, onRerun },
-    },
-  ], [onDelete, onRerun])
-
-  const defaultColDef = useMemo(() => ({
-    sortable: true,
-    resizable: true,
-  }), [])
-
-  const getRowId = useCallback(({ data }) => String(data.id), [])
-
   if (isLoading) {
-    return <div className="text-center py-10 text-[var(--text-muted,#8896A6)]">Loading saved investments…</div>
+    return (
+      <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
+        Loading saved investments…
+      </div>
+    )
   }
 
   if (!investments || investments.length === 0) {
     return (
-      <div className="text-center py-10 text-[var(--text-muted,#8896A6)]">
+      <div className="text-center py-12" style={{ color: 'var(--text-muted)' }}>
         <span className="text-2xl block mb-2">📁</span>
-        <p>No saved investments yet</p>
+        <p className="m-0">No saved investments yet</p>
         <p className="text-xs mt-1 opacity-70">Calculate and save results to build your history</p>
       </div>
     )
   }
 
+  const th = 'px-3 py-2.5 text-left font-semibold text-[0.65rem] uppercase tracking-[0.04em]'
+  const thR = `${th} text-right`
+  const td = 'px-3 py-3 text-left text-[0.8rem]'
+  const tdR = `${td} text-right`
+
   return (
-    <div className="ag-theme-quartz gs-ag-theme w-full">
-      <AgGridReact
-        rowData={investments}
-        columnDefs={columnDefs}
-        defaultColDef={defaultColDef}
-        domLayout="autoHeight"
-        pagination={true}
-        paginationPageSize={10}
-        getRowId={getRowId}
-        animateRows={true}
-        suppressCellFocus={true}
-      />
-    </div>
+    <table className="w-full border-collapse text-[0.8rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      <thead>
+        <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
+          <th className={th} style={{ color: 'var(--text-muted)' }}>Label</th>
+          <th className={th} style={{ color: 'var(--text-muted)' }}>Fund</th>
+          <th className={thR} style={{ color: 'var(--text-muted)' }}>Investment</th>
+          <th className={thR} style={{ color: 'var(--text-muted)' }}>Monthly</th>
+          <th className={`${th} text-center`} style={{ color: 'var(--text-muted)' }}>Years</th>
+          <th className={thR} style={{ color: 'var(--text-muted)' }}>Future Value</th>
+          <th className={thR} style={{ color: 'var(--text-muted)' }}>CAPM</th>
+          <th className={th} style={{ color: 'var(--text-muted)' }}>Saved</th>
+          <th className={th}></th>
+        </tr>
+      </thead>
+      <tbody>
+        {investments.map((inv) => (
+          <tr
+            key={inv.id}
+            className="transition-colors duration-150 hover:bg-[rgba(181,152,90,0.04)]"
+            style={{ borderBottom: '1px solid var(--card-border)' }}
+          >
+            <td className={td} style={{ color: 'var(--text-primary)' }}>
+              <span className="font-medium truncate block max-w-[140px]">
+                {inv.label || inv.fundName || '—'}
+              </span>
+            </td>
+            <td className={td}>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>{inv.ticker}</span>
+            </td>
+            <td className={tdR} style={{ color: 'var(--text-primary)' }}>{formatCurrency(inv.initialInvestment)}</td>
+            <td className={tdR} style={{ color: 'var(--text-secondary)' }}>{formatCurrency(inv.monthlyContribution)}</td>
+            <td className={`${td} text-center`} style={{ color: 'var(--text-secondary)' }}>{inv.years}</td>
+            <td className={tdR}>
+              <span className="font-semibold" style={{ color: 'var(--accent)' }}>{formatCurrency(inv.futureValue)}</span>
+            </td>
+            <td className={tdR} style={{ color: 'var(--text-primary)' }}>{formatPercent(inv.capmReturn)}</td>
+            <td className={td}>
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{timeAgo(inv.savedAt)}</span>
+            </td>
+            <td className={td}>
+              <ActionButtons investment={inv} onDelete={onDelete} onRerun={onRerun} />
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   )
 }

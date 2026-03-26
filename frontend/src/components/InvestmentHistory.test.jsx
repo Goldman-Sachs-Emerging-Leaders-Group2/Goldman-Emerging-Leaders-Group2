@@ -3,11 +3,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import InvestmentHistory from './InvestmentHistory'
 
-// AG Grid needs a container with dimensions
-const renderWithContainer = (ui) => {
-  return render(<div style={{ width: '800px', height: '600px' }}>{ui}</div>)
-}
-
 const sampleInvestment = {
   id: 1,
   label: 'Retirement',
@@ -34,27 +29,38 @@ describe('InvestmentHistory', () => {
   }
 
   it('shows loading state', () => {
-    renderWithContainer(<InvestmentHistory {...defaultProps} isLoading={true} />)
+    render(<InvestmentHistory {...defaultProps} isLoading={true} />)
     expect(screen.getByText(/loading/i)).toBeInTheDocument()
   })
 
   it('shows empty state when no investments', () => {
-    renderWithContainer(<InvestmentHistory {...defaultProps} />)
+    render(<InvestmentHistory {...defaultProps} />)
     expect(screen.getByText(/no saved investments/i)).toBeInTheDocument()
   })
 
-  it('renders AG Grid when investments exist', () => {
-    renderWithContainer(
-      <InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />
-    )
-    // AG Grid should render the container
-    expect(document.querySelector('.ag-theme-quartz')).toBeInTheDocument()
+  it('renders table with investment data', () => {
+    render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />)
+    expect(screen.getByText('VFIAX')).toBeInTheDocument()
+    expect(screen.getByText('Retirement')).toBeInTheDocument()
+    expect(screen.getByText('$10,000.00')).toBeInTheDocument()
   })
 
-  it('does not show empty state when investments exist', () => {
-    renderWithContainer(
-      <InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />
-    )
-    expect(screen.queryByText(/no saved investments/i)).not.toBeInTheDocument()
+  it('renders action buttons', () => {
+    render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />)
+    expect(screen.getByTitle('Load these parameters into the calculator')).toBeInTheDocument()
+    expect(screen.getByTitle('Delete')).toBeInTheDocument()
+  })
+
+  it('calls onRerun when re-run button clicked', async () => {
+    const onRerun = vi.fn()
+    render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} onRerun={onRerun} />)
+    await userEvent.click(screen.getByTitle('Load these parameters into the calculator'))
+    expect(onRerun).toHaveBeenCalledWith(sampleInvestment)
+  })
+
+  it('shows delete confirmation on first click', async () => {
+    render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />)
+    await userEvent.click(screen.getByTitle('Delete'))
+    expect(screen.getByText('Sure?')).toBeInTheDocument()
   })
 })
