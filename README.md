@@ -1,157 +1,94 @@
-# Mutual Fund Calculator — Goldman Sachs Emerging Leaders Group 2
+# Mutual Fund Investment Calculator
 
-A web app where users select a mutual fund, enter an investment amount and time horizon, and see the predicted future value using the CAPM formula.
+Goldman Sachs Emerging Leaders Program — Group 2
+
+A dashboard for comparing mutual fund and ETF investments using the Capital Asset Pricing Model (CAPM). Select funds, set your parameters, and see projected returns with interactive charts and insights.
+
+## Quick Start
+
+```bash
+./start.sh
+```
+
+This starts both the Spring Boot backend (port 8080) and the React frontend (port 5173). Open [http://localhost:5173](http://localhost:5173).
+
+To stop, press `Ctrl+C`.
 
 ## Prerequisites
 
-- **Java 21** — [Download](https://adoptium.net/)
-- **Maven 3.9+** — [Download](https://maven.apache.org/download.cgi)
-- **Node.js 18+** and **Yarn** — for the React frontend
+- Java 21
+- Maven 3.9+
+- Node.js 18+
+- Yarn
 
-Verify your setup:
+## Running Manually
 
-```bash
-java -version    # should show 21
-mvn -version     # should show 3.9+
-node --version   # should show 18+
-yarn --version   # should show 1.22+
-```
-
-## Getting Started
-
-### 1. Clone the repo
+If you prefer to start each server separately:
 
 ```bash
-git clone <your-repo-url>
-cd Goldman-Emerging-Leaders-Group2
-```
-
-### 2. Run the backend
-
-```bash
+# Terminal 1 — Backend
 mvn spring-boot:run
-```
 
-The API will be available at `http://localhost:8080`.
-
-### 3. Run the frontend
-
-```bash
+# Terminal 2 — Frontend
 cd frontend
 yarn install
 yarn dev
 ```
 
-The React app will open at `http://localhost:5173`.
+## Running Tests
+
+```bash
+# Backend (from project root)
+mvn test
+
+# Frontend (from frontend/)
+cd frontend
+yarn test
+```
+
+## Features
+
+- **CAPM Calculator** — Future value projections using continuous compounding
+- **Multi-Fund Comparison** — Compare up to 5 funds side-by-side
+- **5 Mutual Funds + 5 ETFs** — VFIAX, FXAIX, AGTHX, FCNTX, TRBCX, SPY, QQQ, VTI, SCHD, ARKK
+- **Custom Tickers** — Search and add any valid US ticker
+- **Monthly Contributions (SIP)** — Factor in recurring investments
+- **Risk Tolerance** — 1-10 scale with bidirectional fund-risk matching
+- **Goal Tracking** — Set a target amount, see if/when projections reach it
+- **Saved Investments** — Save calculations to an H2 database, view history, re-run scenarios
+- **Interactive Charts** — Growth projections, investment breakdown pie chart
+- **Financial Insights** — Time to double, inflation-adjusted returns, risk analysis
+- **Dashboard Layout** — Sidebar navigation with animated transitions
+- **Dark / Light Theme** — Toggle with persistence
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Backend | Java 21, Spring Boot 4.0.3, Maven |
-| Frontend | React 19, Vite 7, Yarn |
-| External API | Newton Analytics (stock beta values) |
+| Backend | Java 21, Spring Boot 3.3.5, Spring Data JPA, H2 Database |
+| Frontend | React 19, Vite 7, Tailwind CSS |
+| Charts | Recharts |
+| External APIs | Newton Analytics (beta), Yahoo Finance (historical returns) |
 
 ## API Endpoints
 
-### GET `/api/mutualfunds` (alias: `/api/mutual-funds`)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/mutualfunds` | List all available funds |
+| GET | `/api/calculate?ticker=VFIAX&investment=10000&years=10` | Calculate future value |
+| GET | `/api/investments` | List saved investments |
+| POST | `/api/investments` | Save a calculation |
+| DELETE | `/api/investments/{id}` | Delete a saved investment |
 
-Returns the list of available mutual funds (both routes return the same payload).
-
-Example:
-
-```bash
-curl "http://localhost:8080/api/mutualfunds"
-curl "http://localhost:8080/api/mutual-funds"
-```
-
-```json
-[
-  { "ticker": "VFIAX", "name": "Vanguard 500 Index Fund", "expectedAnnualReturn": 0.1553 },
-  { "ticker": "FXAIX", "name": "Fidelity 500 Index Fund", "expectedAnnualReturn": 0.1556 },
-  { "ticker": "AGTHX", "name": "American Funds Growth Fund of America", "expectedAnnualReturn": 0.1515 },
-  { "ticker": "FCNTX", "name": "Fidelity Contrafund", "expectedAnnualReturn": 0.1776 },
-  { "ticker": "TRBCX", "name": "T. Rowe Price Blue Chip Growth", "expectedAnnualReturn": 0.1649 }
-]
-```
-
-### GET `/api/calculate` (alias: `/api/investment/future-value`)
-
-Calculates the predicted future value using CAPM.
-
-Required query params:
-- `ticker` (non-blank)
-- `investment` (> 0)
-- `years` (0 to 100)
-
-Examples:
-
-```bash
-curl "http://localhost:8080/api/calculate?ticker=VFIAX&investment=10000&years=10"
-curl "http://localhost:8080/api/investment/future-value?ticker=VFIAX&investment=10000&years=10"
-```
-
-```json
-{
-  "ticker": "VFIAX",
-  "fundName": "Vanguard 500 Index Fund",
-  "initialInvestment": 10000.0,
-  "years": 10,
-  "beta": 1.0,
-  "riskFreeRate": 0.0425,
-  "expectedMarketReturn": 0.1553,
-  "capmReturn": 0.1553,
-  "futureValue": 42317.69
-}
-```
-
-Error responses:
-
-```json
-{ "error": "INVALID_INPUT", "message": "<human-readable>" }
-```
-
-```json
-{ "error": "TICKER_NOT_FOUND", "message": "Ticker '<ticker>' is not supported." }
-```
-
-## Project Structure
-
-```
-Goldman-Emerging-Leaders-Group2/
-├── pom.xml                              ← Maven build config
-├── src/main/java/com/goldmansachs/els/
-│   ├── ElsApplication.java             ← Entry point
-│   ├── model/
-│   │   ├── MutualFund.java             ← Fund data (ticker, name, return)
-│   │   ├── CalculationResult.java      ← API response for /calculate
-│   │   └── NewtonAnalyticsResponse.java ← Newton API response mapping
-│   ├── service/
-│   │   ├── MutualFundService.java      ← Hardcoded fund list + lookup
-│   │   ├── BetaService.java            ← Calls Newton Analytics for beta
-│   │   └── CalculationService.java     ← CAPM formula + future value
-│   ├── controller/
-│   │   └── MutualFundController.java   ← REST endpoints
-│   └── config/
-│       └── WebConfig.java              ← CORS config for React
-└── frontend/                            ← React app (Vite + Yarn)
-    ├── package.json
-    ├── vite.config.js
-    ├── index.html
-    └── src/
-        ├── main.jsx                     ← React entry point
-        ├── App.jsx                      ← Main app component
-        ├── App.css
-        └── index.css
-```
+Optional query params on `/api/calculate`: `monthlyContribution` (default 0).
 
 ## CAPM Formula
 
 ```
-CAPM Return = Risk-Free Rate + Beta × (Expected Market Return − Risk-Free Rate)
-Future Value = Investment × e^(CAPM Return × Years)    [continuous compounding]
+CAPM Return = Risk-Free Rate + β × (Expected Market Return − Risk-Free Rate)
+Future Value = Investment × e^(CAPM Return × Years)
 ```
 
-- **Risk-free rate:** 4.25% (hardcoded)
-- **Beta:** Fetched from Newton Analytics API
-- **Expected market return:** Based on the fund's historical annual return
+- **Risk-free rate:** 4.25% (US Treasury baseline)
+- **Beta:** Live from Newton Analytics API
+- **Expected market return:** Yahoo Finance 1-year return, with hardcoded fallback
