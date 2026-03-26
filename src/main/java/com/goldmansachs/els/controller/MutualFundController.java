@@ -40,13 +40,13 @@ public class MutualFundController {
         if (ticker == null || ticker.trim().isEmpty()) {
             throw new InvalidInputException("ticker is required and must be non-blank.");
         }
-        if (investment <= 0) {
-            throw new InvalidInputException("investment must be greater than 0.");
+        if (!Double.isFinite(investment) || investment <= 0) {
+            throw new InvalidInputException("investment must be a positive number.");
         }
-        if (years < 0 || years > 100) {
-            throw new InvalidInputException("years must be between 0 and 100.");
+        if (years < 1 || years > 100) {
+            throw new InvalidInputException("years must be between 1 and 100.");
         }
-        if (monthlyContribution < 0) {
+        if (!Double.isFinite(monthlyContribution) || monthlyContribution < 0) {
             throw new InvalidInputException("monthlyContribution must be 0 or greater.");
         }
 

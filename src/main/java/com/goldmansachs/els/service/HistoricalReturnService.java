@@ -46,7 +46,11 @@ public class HistoricalReturnService {
                 return OptionalDouble.empty();
             }
 
-            List<Double> prices = result.indicators().adjClose().get(0).prices();
+            var adjCloseEntry = result.indicators().adjClose().get(0);
+            if (adjCloseEntry == null) {
+                return OptionalDouble.empty();
+            }
+            List<Double> prices = adjCloseEntry.prices();
             if (prices == null || prices.isEmpty()) {
                 return OptionalDouble.empty();
             }

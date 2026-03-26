@@ -31,6 +31,18 @@ public class InvestmentHistoryController {
         if (investment.getInitialInvestment() <= 0) {
             throw new InvalidInputException("initialInvestment must be greater than 0.");
         }
+        if (investment.getYears() < 1) {
+            throw new InvalidInputException("years must be at least 1.");
+        }
+        if (investment.getMonthlyContribution() < 0) {
+            throw new InvalidInputException("monthlyContribution must be 0 or greater.");
+        }
+        if (!Double.isFinite(investment.getFutureValue())) {
+            throw new InvalidInputException("futureValue must be a finite number.");
+        }
+        if (investment.getLabel() != null && investment.getLabel().length() > 100) {
+            throw new InvalidInputException("label must be 100 characters or fewer.");
+        }
         investment.setId(null);
         investment.setSavedAt(null);
         return repository.save(investment);

@@ -75,17 +75,21 @@ export function useFundForm() {
     const inv = Number(form.investment)
     if (!Number.isFinite(inv) || inv <= 0) errors.investment = 'Investment must be greater than 0.'
     const yrs = Number(form.years)
-    if (!Number.isInteger(yrs) || yrs < 0 || yrs > 100) errors.years = 'Years must be an integer from 0 to 100.'
+    if (!Number.isInteger(yrs) || yrs < 1 || yrs > 100) errors.years = 'Years must be between 1 and 100.'
     setFieldErrors(errors)
     return errors
   }
 
   const cleanupFailedTickers = (failedSet) => {
-    setCustomTickers(prev => prev.filter(t => !failedSet.has(t)))
-    setForm(prev => ({
-      ...prev,
-      tickers: prev.tickers.filter(t => !failedSet.has(t) || !customTickers.includes(t)),
-    }))
+    setCustomTickers(prev => {
+      const remaining = new Set(prev.filter(t => !failedSet.has(t)))
+      // Use the fresh customTickers set to filter form tickers
+      setForm(formPrev => ({
+        ...formPrev,
+        tickers: formPrev.tickers.filter(t => !failedSet.has(t) || !remaining.has(t)),
+      }))
+      return [...remaining]
+    })
   }
 
   const populateFrom = (inv) => {
@@ -95,6 +99,7 @@ export function useFundForm() {
       years: String(inv.years),
     })
     setMonthlyContribution(String(inv.monthlyContribution || 0))
+    setGoalAmount('')
     setFormCollapsed(false)
   }
 

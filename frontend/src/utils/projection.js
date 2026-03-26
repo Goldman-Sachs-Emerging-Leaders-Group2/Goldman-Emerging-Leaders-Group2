@@ -1,8 +1,11 @@
 const calcFV = (initial, capmReturn, monthly, year) => {
   const lumpSum = initial * Math.exp(capmReturn * year)
-  if (monthly <= 0 || year <= 0 || capmReturn === 0) return lumpSum
+  if (monthly <= 0 || year <= 0) return lumpSum
   const monthlyRate = Math.exp(capmReturn / 12) - 1
-  if (monthlyRate <= 0) return lumpSum
+  if (Math.abs(monthlyRate) < 1e-10) {
+    // Near-zero rate: contributions accumulate without growth
+    return lumpSum + monthly * 12 * year
+  }
   const annuity = monthly * (Math.exp(capmReturn * year) - 1) / monthlyRate
   return lumpSum + annuity
 }

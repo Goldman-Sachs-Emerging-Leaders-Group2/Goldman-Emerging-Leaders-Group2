@@ -26,8 +26,9 @@ public class CalculationService {
     }
 
     public CalculationResult calculate(String ticker, double investment, int years, double monthlyContribution) {
+        // Look up fund — use historical return as fallback for unknown tickers
         MutualFund fund = mutualFundService.findFundByTicker(ticker)
-                .orElse(new MutualFund(ticker.toUpperCase(), ticker.toUpperCase(), 0.0));
+                .orElse(new MutualFund(ticker.toUpperCase(), ticker.toUpperCase(), 0.10));
         double beta = betaService.getBeta(ticker);
 
         double expectedMarketReturn = historicalReturnService
@@ -41,8 +42,11 @@ public class CalculationService {
         double annuityFV = 0;
         if (monthlyContribution > 0 && years > 0 && capmReturn != 0) {
             double monthlyRate = Math.exp(capmReturn / 12.0) - 1;
-            if (monthlyRate > 0) {
+            if (Math.abs(monthlyRate) > 1e-10) {
                 annuityFV = monthlyContribution * (Math.exp(capmReturn * years) - 1) / monthlyRate;
+            } else {
+                // Near-zero rate: contributions accumulate without growth
+                annuityFV = monthlyContribution * 12.0 * years;
             }
         }
         double futureValue = lumpSumFV + annuityFV;

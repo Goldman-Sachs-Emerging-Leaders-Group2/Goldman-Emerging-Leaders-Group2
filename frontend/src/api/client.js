@@ -95,7 +95,11 @@ export const getInvestments = async () => {
     throw await parseError(response)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch {
+    throw new Error('Received an invalid response from the server.')
+  }
 }
 
 export const saveInvestment = async (data) => {
@@ -109,7 +113,11 @@ export const saveInvestment = async (data) => {
     throw await parseError(response)
   }
 
-  return response.json()
+  try {
+    return await response.json()
+  } catch {
+    throw new Error('Received an invalid response from the server.')
+  }
 }
 
 export const deleteInvestment = async (id) => {

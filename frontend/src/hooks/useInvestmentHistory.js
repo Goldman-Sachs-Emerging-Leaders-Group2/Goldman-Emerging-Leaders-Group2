@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getInvestments, saveInvestment, deleteInvestment as deleteInvestmentApi } from '../api/client'
 
 export function useInvestmentHistory(onError) {
@@ -6,6 +6,8 @@ export function useInvestmentHistory(onError) {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [saveLabel, setSaveLabel] = useState('')
   const [saveStatus, setSaveStatus] = useState(null)
+  const [saveError, setSaveError] = useState('')
+  const saveTimeoutRef = useRef(null)
 
   useEffect(() => {
     const loadHistory = async () => {
@@ -20,6 +22,9 @@ export function useInvestmentHistory(onError) {
       }
     }
     loadHistory()
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
   }, [])
 
   const saveResults = async (results) => {
@@ -27,6 +32,7 @@ export function useInvestmentHistory(onError) {
     if (entries.length === 0) return
 
     setSaveStatus('saving')
+    setSaveError('')
     try {
       const saved = await Promise.all(
         entries.map(r => saveInvestment({
@@ -47,8 +53,11 @@ export function useInvestmentHistory(onError) {
       setSavedInvestments(prev => [...saved, ...prev])
       setSaveLabel('')
       setSaveStatus('saved')
-      setTimeout(() => setSaveStatus(null), 2000)
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = setTimeout(() => setSaveStatus(null), 2000)
     } catch (error) {
+      console.error('Save failed:', error)
+      setSaveError(error.message || 'Failed to save. Is the backend running?')
       onError?.('Failed to save: ' + error.message)
       setSaveStatus(null)
     }
@@ -64,7 +73,7 @@ export function useInvestmentHistory(onError) {
   }
 
   return {
-    savedInvestments, isLoadingHistory, saveLabel, setSaveLabel, saveStatus,
+    savedInvestments, isLoadingHistory, saveLabel, setSaveLabel, saveStatus, saveError,
     saveResults, removeInvestment,
   }
 }
