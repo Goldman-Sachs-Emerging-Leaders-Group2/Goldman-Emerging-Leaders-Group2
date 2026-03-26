@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 
-// Fetches a fund's beta (volatility relative to the S&P 500) from Newton Analytics
+// Fetches an asset's beta (volatility relative to the S&P 500) from Newton Analytics
 @Service
 public class BetaService {
 

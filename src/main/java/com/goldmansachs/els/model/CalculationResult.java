@@ -2,7 +2,8 @@ package com.goldmansachs.els.model;
 
 public record CalculationResult(
         String ticker,
-        String fundName,
+        String assetName,
+        AssetType assetType,
         double initialInvestment,
         int years,
         double beta,

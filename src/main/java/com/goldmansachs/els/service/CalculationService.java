@@ -1,8 +1,8 @@
 package com.goldmansachs.els.service;
 
 import com.goldmansachs.els.exception.ExternalApiException;
+import com.goldmansachs.els.model.Asset;
 import com.goldmansachs.els.model.CalculationResult;
-import com.goldmansachs.els.model.MutualFund;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,27 +11,27 @@ public class CalculationService {
     // US Treasury rate, used as the "zero risk" baseline in CAPM
     private static final double RISK_FREE_RATE = 0.0425;
 
-    private final MutualFundService mutualFundService;
+    private final AssetService assetService;
     private final BetaService betaService;
     private final HistoricalReturnService historicalReturnService;
 
     public CalculationService(
-            MutualFundService mutualFundService,
+            AssetService assetService,
             BetaService betaService,
             HistoricalReturnService historicalReturnService
     ) {
-        this.mutualFundService = mutualFundService;
+        this.assetService = assetService;
         this.betaService = betaService;
         this.historicalReturnService = historicalReturnService;
     }
 
     public CalculationResult calculate(String ticker, double investment, int years) {
-        MutualFund fund = mutualFundService.getFundByTicker(ticker);
+        Asset asset = assetService.getAssetByTicker(ticker);
         double beta = betaService.getBeta(ticker);
 
         double expectedMarketReturn = historicalReturnService
             .getLastYearExpectedReturn(ticker)
-            .orElse(fund.expectedAnnualReturn());
+            .orElse(asset.expectedAnnualReturn());
         // CAPM: rate = riskFreeRate + beta * (expectedReturn - riskFreeRate)
         double capmReturn = RISK_FREE_RATE + beta * (expectedMarketReturn - RISK_FREE_RATE);
         // Future value: principal * e^(rate * years)
@@ -43,8 +43,9 @@ public class CalculationService {
         }
 
         return new CalculationResult(
-                fund.ticker(),
-                fund.name(),
+                asset.ticker(),
+                asset.name(),
+                asset.type(),
                 investment,
                 years,
                 beta,

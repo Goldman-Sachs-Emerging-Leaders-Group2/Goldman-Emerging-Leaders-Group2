@@ -2,10 +2,10 @@ package com.goldmansachs.els.controller;
 
 import com.goldmansachs.els.exception.InvalidInputException;
 import com.goldmansachs.els.exception.TickerNotFoundException;
+import com.goldmansachs.els.model.Asset;
 import com.goldmansachs.els.model.CalculationResult;
-import com.goldmansachs.els.model.MutualFund;
+import com.goldmansachs.els.service.AssetService;
 import com.goldmansachs.els.service.CalculationService;
-import com.goldmansachs.els.service.MutualFundService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,19 +15,19 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api")
-public class MutualFundController {
+public class AssetController {
 
-    private final MutualFundService mutualFundService;
+    private final AssetService assetService;
     private final CalculationService calculationService;
 
-    public MutualFundController(MutualFundService mutualFundService, CalculationService calculationService) {
-        this.mutualFundService = mutualFundService;
+    public AssetController(AssetService assetService, CalculationService calculationService) {
+        this.assetService = assetService;
         this.calculationService = calculationService;
     }
 
-    @GetMapping({"/mutualfunds", "/mutual-funds"})
-    public List<MutualFund> getAllFunds() {
-        return mutualFundService.getAllFunds();
+    @GetMapping({"/assets", "/mutualfunds", "/mutual-funds"})
+    public List<Asset> getAllAssets() {
+        return assetService.getAllAssets();
     }
 
     // Consider POST if parameters grow or include sensitive data
