@@ -55,7 +55,7 @@ export default function SummaryStats({ bestResult, bestCapmResult, resultCount }
           </span>
           <span
             className="text-2xl font-bold leading-tight"
-            style={{ color: 'var(--hero-card-text)' }}
+            style={{ color: 'var(--hero-card-text)', fontVariantNumeric: 'tabular-nums' }}
           >
             {s.getValue(props)}
           </span>

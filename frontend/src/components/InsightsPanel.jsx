@@ -49,7 +49,7 @@ const InsightsPanel = ({ results, isCalculating, riskTolerance }) => {
         <div
           className="flex items-start gap-2.5 py-2.5 px-2 -mx-2 rounded-lg transition-colors duration-150 hover:bg-[rgba(181,152,90,0.04)]"
           style={{
-            borderTop: '1px solid var(--card-border)',
+            borderTop: index > 0 ? '1px solid var(--card-border)' : 'none',
             animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both',
             animationDelay: `${1.5 + index * 0.1}s`,
           }}

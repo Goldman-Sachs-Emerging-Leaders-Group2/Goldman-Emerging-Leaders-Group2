@@ -9,6 +9,7 @@ import PageHeader from './components/PageHeader'
 import SummaryStats from './components/SummaryStats'
 import SaveBar from './components/SaveBar'
 import FormSummary from './components/FormSummary'
+import ErrorBoundary from './components/ErrorBoundary'
 
 import { useTheme } from './hooks/useTheme'
 import { useViewState } from './hooks/useViewState'
@@ -20,7 +21,7 @@ import { useInvestmentHistory } from './hooks/useInvestmentHistory'
 const reveal = (delay) => ({ animation: `revealUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both` })
 
 // Reusable style constants
-const card = 'rounded-xl p-5 transition-colors duration-200 hover:border-[var(--accent)]'
+const card = 'rounded-xl p-5 transition-all duration-150 hover:border-[var(--accent)] hover:bg-[rgba(181,152,90,0.03)]'
 const cardStyle = { background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--card-shadow)' }
 const cardHeader = 'flex items-center justify-between mb-4'
 const cardTitle = 'text-base font-semibold m-0'
@@ -141,7 +142,7 @@ function App() {
 
   // Results view — staggered reveal animation on each section
   const resultsView = calc.hasResults && (
-    <section className="mt-6 flex flex-col gap-6">
+    <section className="mt-6 flex flex-col gap-8">
       {narrative && (
         <p className="text-[0.95rem] leading-relaxed" style={{ color: 'var(--text-secondary)', ...reveal(0.25) }}>
           {narrative}
@@ -163,10 +164,11 @@ function App() {
           onSave={handleSave}
           saveStatus={history.saveStatus}
           resultCount={calc.resultCount}
+          error={history.saveError}
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={reveal(0.75)}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5" style={reveal(0.75)}>
         <div className={card} style={cardStyle}>
           <div className={cardHeader}>
             <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Projected Results</h2>
@@ -241,6 +243,7 @@ function App() {
         onLogoClick={dashboardMode ? handleNewAnalysis : undefined}
       />
 
+      <ErrorBoundary>
       {!dashboardMode ? (
         <>
           {/* Entry Mode */}
@@ -285,14 +288,15 @@ function App() {
             savedCount={history.savedInvestments.length}
             onNewAnalysis={handleNewAnalysis}
           />
-          <main className="ml-[210px] min-w-0 px-16 py-8 animate-[contentFadeIn_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_both]">
+          <main className="ml-[210px] min-w-0 max-w-[1400px] px-16 py-8 animate-[contentFadeIn_0.7s_cubic-bezier(0.16,1,0.3,1)_0.2s_both]">
             {alerts}
-            {(activeView === 'results' || !form.formCollapsed) && calculatorCard}
+            {activeView === 'results' && calculatorCard}
             {activeView === 'results' && resultsView}
             {activeView === 'history' && historyView}
           </main>
         </>
       )}
+      </ErrorBoundary>
     </div>
   )
 }

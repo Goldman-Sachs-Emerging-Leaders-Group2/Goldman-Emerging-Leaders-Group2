@@ -23,18 +23,20 @@ const ComparisonTable = ({ results, riskTolerance }) => {
   const lowestBeta = tickers.reduce((best, t) => results[t].beta < results[best].beta ? t : best, tickers[0])
 
   const th = 'px-2 py-2 text-left text-[var(--text-muted)] font-semibold text-[0.65rem] uppercase tracking-[0.04em]'
+  const thR = `${th} text-right`
   const td = 'px-2 py-2.5 text-left text-[var(--text-primary)] text-[0.8rem]'
+  const tdR = `${td} text-right`
   const bestCell = '!text-[var(--accent)] font-semibold'
 
   return (
-    <table className="w-full border-collapse text-[0.8rem]">
+    <table className="w-full border-collapse text-[0.8rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>
       <thead>
         <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
           <th className={th}>Fund</th>
-          <th className={th}>Beta</th>
-          <th className={th}>CAPM</th>
-          <th className={th}>Mkt Ret</th>
-          <th className={th}>Future Value</th>
+          <th className={thR}>Beta</th>
+          <th className={thR}>CAPM</th>
+          <th className={thR}>Mkt Ret</th>
+          <th className={thR}>Future Value</th>
           <th className={th}></th>
         </tr>
       </thead>
@@ -60,10 +62,10 @@ const ComparisonTable = ({ results, riskTolerance }) => {
                   </span>
                 </span>
               </td>
-              <td className={`${td} ${isSafest ? bestCell : ''}`}>{formatDecimal(r.beta, 2)}</td>
-              <td className={td}>{formatPercent(r.capmReturn)}</td>
-              <td className={td}>{formatPercent(r.expectedMarketReturn)}</td>
-              <td className={`${td} ${isBestGrowth ? bestCell : ''} font-semibold`}>{formatCurrency(r.futureValue)}</td>
+              <td className={`${tdR} ${isSafest ? bestCell : ''}`}>{formatDecimal(r.beta, 2)}</td>
+              <td className={tdR}>{formatPercent(r.capmReturn)}</td>
+              <td className={tdR}>{formatPercent(r.expectedMarketReturn)}</td>
+              <td className={`${tdR} ${isBestGrowth ? bestCell : ''} font-semibold`}>{formatCurrency(r.futureValue)}</td>
               <td className={td}>
                 {isBestGrowth && isSafest && <VerdictTag variant="best">Best Overall</VerdictTag>}
                 {isBestGrowth && !isSafest && <VerdictTag variant="growth">Best Growth</VerdictTag>}

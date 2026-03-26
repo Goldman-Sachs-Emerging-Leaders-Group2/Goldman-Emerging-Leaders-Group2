@@ -1,7 +1,7 @@
 export default function FormSummary({ tickers, investment, years, onExpand }) {
   return (
     <div
-      className="flex items-center justify-between gap-4 px-3 py-3 rounded-lg cursor-pointer transition-colors hover:bg-[rgba(181,152,90,0.05)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2"
+      className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors hover:bg-[rgba(181,152,90,0.05)] focus-visible:outline-2 focus-visible:outline-[var(--accent)] focus-visible:outline-offset-2"
       onClick={onExpand}
       role="button"
       tabIndex={0}

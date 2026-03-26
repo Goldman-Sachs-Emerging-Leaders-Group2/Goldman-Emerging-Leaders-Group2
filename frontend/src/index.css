@@ -139,7 +139,7 @@ input, select, button {
   --bg: #0B1221;
   --card-bg: #151F30;
   --card-border: #243447;
-  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --card-shadow: none;
   --text-primary: #F0F2F5;
   --text-secondary: #B0C4D8;
   --text-muted: #7B93AD;
@@ -166,29 +166,4 @@ input, select, button {
 [data-theme="dark"] .gs-alert-info {
   background: rgba(255, 255, 255, 0.04);
   border-color: rgba(255, 255, 255, 0.08);
-}
-
-/* AG Grid theme overrides */
-.gs-ag-theme {
-  --ag-header-background-color: var(--navy, #00244D);
-  --ag-header-foreground-color: #fff;
-  --ag-odd-row-background-color: var(--card-bg, #fff);
-  --ag-background-color: var(--card-bg, #fff);
-  --ag-foreground-color: var(--text-primary, #00244D);
-  --ag-row-hover-color: rgba(181, 152, 90, 0.08);
-  --ag-selected-row-background-color: rgba(181, 152, 90, 0.12);
-  --ag-border-color: var(--card-border, #E2E8F0);
-  --ag-font-size: 0.82rem;
-  --ag-row-height: 42px;
-  --ag-header-height: 40px;
-  --ag-border-radius: 8px;
-}
-
-[data-theme="dark"] .gs-ag-theme {
-  --ag-header-background-color: #0B1221;
-  --ag-odd-row-background-color: #151F30;
-  --ag-background-color: #151F30;
-  --ag-foreground-color: #F0F2F5;
-  --ag-border-color: #243447;
-  --ag-row-hover-color: rgba(181, 152, 90, 0.1);
 }

@@ -1,4 +1,4 @@
-export default function SaveBar({ label, onLabelChange, onSave, saveStatus, resultCount }) {
+export default function SaveBar({ label, onLabelChange, onSave, saveStatus, resultCount, error }) {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') onSave()
   }
@@ -8,7 +8,7 @@ export default function SaveBar({ label, onLabelChange, onSave, saveStatus, resu
 
   return (
     <div
-      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 rounded-lg"
+      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-5 rounded-lg"
       style={{
         background: 'var(--card-bg, #fff)',
         border: '1px solid var(--card-border, #E2E8F0)',
@@ -40,6 +40,9 @@ export default function SaveBar({ label, onLabelChange, onSave, saveStatus, resu
             ? '\u2713 Saved'
             : `Save Result${resultCount > 1 ? 's' : ''}`}
       </button>
+      {error && (
+        <p className="text-xs text-red-500 w-full sm:w-auto">{error}</p>
+      )}
     </div>
   )
 }

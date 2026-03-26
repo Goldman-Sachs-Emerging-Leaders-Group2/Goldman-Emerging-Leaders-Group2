@@ -68,7 +68,7 @@ const BreakdownRow = ({ color, label, helpText, children, index }) => (
 )
 
 const BreakdownValue = ({ children }) => (
-  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
     {children}
   </span>
 )
