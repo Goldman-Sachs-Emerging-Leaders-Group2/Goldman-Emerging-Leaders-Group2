@@ -56,7 +56,10 @@ const CalculatorForm = ({
   return (
     <form className="grid gap-[0.8rem]" onSubmit={onSubmit} noValidate>
       <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-        <label>Select Funds <span className="text-[0.72rem] font-normal text-[var(--text-muted)]">({form.tickers.length}/{MAX_SELECTIONS})</span></label>
+        <label>Select Mutual Funds <span className="text-[0.72rem] font-normal text-[var(--text-muted)]">({form.tickers.length}/{MAX_SELECTIONS})</span></label>
+        <p className="m-0 text-[0.76rem] leading-5 text-[var(--text-muted)]">
+          This tool is built to compare performance between mutual funds. Add a benchmark ETF only if you want an extra reference in the same scenario.
+        </p>
 
         <div className="mb-[0.4rem]">
           <div className="inline-flex gap-1">
@@ -80,7 +83,7 @@ const CalculatorForm = ({
               }`}
               onClick={() => setFundTab('etfs')}
             >
-              ETFs ({etfs.length}){etfSelected > 0 && <span className="font-medium opacity-80"> &middot; {etfSelected} selected</span>}
+              Benchmarks & ETFs ({etfs.length}){etfSelected > 0 && <span className="font-medium opacity-80"> &middot; {etfSelected} selected</span>}
             </button>
           </div>
         </div>
@@ -157,7 +160,7 @@ const CalculatorForm = ({
             className="border-none bg-transparent text-[var(--text-muted)] text-[0.75rem] font-medium cursor-pointer py-[0.3rem] px-0 transition-colors duration-200 hover:text-[var(--accent)]"
             onClick={() => setShowCustom(true)}
           >
-            + Search any ticker
+            + Add a custom comparison ticker
           </button>
         ) : (
           <div className="flex gap-2 items-center">
@@ -177,7 +180,7 @@ const CalculatorForm = ({
                   setDuplicateWarning('')
                 }
               }}
-              placeholder="e.g. AAPL, MSFT, GOOGL"
+              placeholder="e.g. SWPPX, VWELX, VTSAX"
               disabled={isCalculating || atMax}
               autoFocus
             />
@@ -235,8 +238,13 @@ const CalculatorForm = ({
 
       <div className="grid grid-cols-2 gap-[0.8rem] max-md:grid-cols-1">
         <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <label htmlFor="years">Investment Duration</label>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <label htmlFor="years">Investment Duration</label>
+            <span className="text-[0.85rem] font-semibold text-[var(--text-primary)] whitespace-nowrap rounded-full border border-[var(--card-border)] bg-[var(--bg)] px-2.5 py-1">
+              {form.years || 10} years
+            </span>
+          </div>
+          <div className="min-w-0">
             <input
               id="years"
               name="years"
@@ -247,9 +255,8 @@ const CalculatorForm = ({
               value={form.years || 10}
               onChange={onChange}
               disabled={isCalculating}
-              className="flex-1 appearance-none h-[6px] rounded-[3px] bg-[var(--input-border)] outline-none !border-none !p-0 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00244D] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-[#B5985A] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 [&::-webkit-slider-thumb:hover]:scale-[1.15] [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#00244D] [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-[#B5985A] [&::-moz-range-thumb]:cursor-pointer"
+              className="w-full min-w-0 appearance-none h-[6px] rounded-[3px] bg-[var(--input-border)] outline-none !border-none !p-0 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00244D] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-[#B5985A] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 [&::-webkit-slider-thumb:hover]:scale-[1.15] [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#00244D] [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-[#B5985A] [&::-moz-range-thumb]:cursor-pointer"
             />
-            <span className="text-[0.9rem] font-semibold text-[var(--text-primary)] whitespace-nowrap min-w-[60px]">{form.years || 10} years</span>
           </div>
           {errors.years && <p className="m-0 text-[var(--error)] text-[0.775rem]">{errors.years}</p>}
         </div>
@@ -272,8 +279,13 @@ const CalculatorForm = ({
         </div>
 
         <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <label htmlFor="riskTolerance">Risk Tolerance</label>
-        <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <label htmlFor="riskTolerance">Risk Tolerance</label>
+            <span className="text-[0.85rem] font-semibold text-[var(--text-primary)] whitespace-nowrap rounded-full border border-[var(--card-border)] bg-[var(--bg)] px-2.5 py-1">
+              {riskTolerance}/10 &middot; {getRiskLabel(riskTolerance)}
+            </span>
+          </div>
+        <div className="min-w-0">
           <input
             id="riskTolerance"
             name="riskTolerance"
@@ -284,9 +296,8 @@ const CalculatorForm = ({
             value={riskTolerance}
             onChange={onRiskToleranceChange}
             disabled={isCalculating}
-            className="flex-1 appearance-none h-[6px] rounded-[3px] bg-[var(--input-border)] outline-none !border-none !p-0 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00244D] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-[#B5985A] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 [&::-webkit-slider-thumb:hover]:scale-[1.15] [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#00244D] [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-[#B5985A] [&::-moz-range-thumb]:cursor-pointer"
+            className="w-full min-w-0 appearance-none h-[6px] rounded-[3px] bg-[var(--input-border)] outline-none !border-none !p-0 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00244D] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-[#B5985A] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 [&::-webkit-slider-thumb:hover]:scale-[1.15] [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#00244D] [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-[#B5985A] [&::-moz-range-thumb]:cursor-pointer"
           />
-          <span className="text-[0.9rem] font-semibold text-[var(--text-primary)] whitespace-nowrap min-w-[60px]">{riskTolerance}/10 &middot; {getRiskLabel(riskTolerance)}</span>
         </div>
       </div>
       </div>
@@ -297,13 +308,13 @@ const CalculatorForm = ({
         disabled={isCalculating || isLoadingFunds || funds.length === 0}
       >
         {isCalculating ? (
-          'Calculating\u2026'
+          'Comparing\u2026'
         ) : (
           <>
             <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
             </svg>
-            Calculate Future Value
+            Compare Fund Performance
           </>
         )}
       </button>

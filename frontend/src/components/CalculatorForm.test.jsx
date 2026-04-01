@@ -60,12 +60,12 @@ describe('CalculatorForm', () => {
 
   it('disables submit button when calculating', () => {
     render(<CalculatorForm {...defaultProps} isCalculating={true} />)
-    expect(screen.getByRole('button', { name: /calculating/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /comparing/i })).toBeDisabled()
   })
 
   it('disables submit button when no funds', () => {
     render(<CalculatorForm {...defaultProps} funds={[]} />)
-    expect(screen.getByRole('button', { name: /calculate/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /compare fund performance/i })).toBeDisabled()
   })
 
   it('shows field error messages', () => {
@@ -80,7 +80,7 @@ describe('CalculatorForm', () => {
 
   it('shows "Calculating…" button text when calculating', () => {
     render(<CalculatorForm {...defaultProps} isCalculating={true} />)
-    expect(screen.getByRole('button', { name: /calculating/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /comparing/i })).toBeInTheDocument()
   })
 
   it('renders monthly contribution input', () => {
@@ -105,8 +105,14 @@ describe('CalculatorForm', () => {
   it('calls onSubmit when form is submitted', async () => {
     const onSubmit = vi.fn((e) => e.preventDefault())
     render(<CalculatorForm {...defaultProps} onSubmit={onSubmit} />)
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
+    await userEvent.click(screen.getByRole('button', { name: /compare fund performance/i }))
     expect(onSubmit).toHaveBeenCalled()
+  })
+
+  it('explains that the tool compares mutual fund performance', () => {
+    render(<CalculatorForm {...defaultProps} />)
+    expect(screen.getByText(/this tool is built to compare performance between mutual funds/i)).toBeInTheDocument()
+    expect(screen.getByText(/select mutual funds/i)).toBeInTheDocument()
   })
 
   it('renders goal amount input', () => {

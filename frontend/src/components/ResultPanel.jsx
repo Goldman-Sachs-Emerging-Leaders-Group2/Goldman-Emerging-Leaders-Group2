@@ -43,7 +43,7 @@ const ANIMATION_DELAYS = ['1.1s', '1.2s', '1.3s', '1.4s']
 
 const BreakdownRow = ({ color, label, helpText, children, index }) => (
   <div
-    className="flex items-center justify-between px-3 py-2.5 rounded-lg border transition-[background] duration-150 animate-slide-in-left"
+    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-3 py-2.5 rounded-lg border transition-[background] duration-150 animate-slide-in-left"
     style={{
       background: 'var(--bg)',
       borderColor: 'var(--card-border)',
@@ -53,12 +53,12 @@ const BreakdownRow = ({ color, label, helpText, children, index }) => (
     onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)' }}
     onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--card-border)' }}
   >
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 flex-1 items-center gap-2">
       <div
         className="w-2 h-2 rounded-full shrink-0"
         style={{ background: DOT_COLORS[color] }}
       />
-      <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+      <span className="min-w-0 text-sm leading-snug" style={{ color: 'var(--text-secondary)' }}>
         {label}
       </span>
       <HelpIcon text={helpText} />

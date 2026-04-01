@@ -64,6 +64,18 @@ beforeEach(() => {
 })
 
 describe('App', () => {
+  it('renders landing page copy focused on mutual fund comparisons', async () => {
+    globalThis.fetch = mockFetch(fundsResponse, calculationResponse)
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: /compare mutual fund performance side by side/i })).toBeInTheDocument()
+    expect(screen.getByText(/compare projected performance between mutual funds/i)).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
+    })
+  })
+
   // --- Load behavior ---
 
   it('populates fund checkboxes after loading', async () => {
@@ -108,7 +120,7 @@ describe('App', () => {
     const checkboxes = screen.getAllByRole('checkbox')
     await userEvent.click(checkboxes[0]) // uncheck VFIAX
 
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
+    await userEvent.click(screen.getByRole('button', { name: /compare fund performance/i }))
 
     expect(screen.getByText('Please select at least one mutual fund.')).toBeInTheDocument()
   })
@@ -124,7 +136,7 @@ describe('App', () => {
     const investmentInput = screen.getByLabelText('Initial Investment ($)')
     await userEvent.clear(investmentInput)
     await userEvent.type(investmentInput, '0')
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
+    await userEvent.click(screen.getByRole('button', { name: /compare fund performance/i }))
 
     expect(screen.getByText('Investment must be greater than 0.')).toBeInTheDocument()
   })
@@ -139,7 +151,7 @@ describe('App', () => {
       expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
+    await userEvent.click(screen.getByRole('button', { name: /compare fund performance/i }))
 
     await waitFor(() => {
       expect(screen.getAllByText('Vanguard 500 Index Fund').length).toBeGreaterThanOrEqual(1)
@@ -158,7 +170,7 @@ describe('App', () => {
       expect(screen.getByText(/VFIAX/)).toBeInTheDocument()
     })
 
-    await userEvent.click(screen.getByRole('button', { name: /calculate future value/i }))
+    await userEvent.click(screen.getByRole('button', { name: /compare fund performance/i }))
 
     await waitFor(() => {
       expect(screen.getByText('External API failed')).toBeInTheDocument()

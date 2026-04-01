@@ -38,6 +38,7 @@ describe('ResultPanel', () => {
     render(<ResultPanel results={results} isCalculating={false} />)
     expect(screen.getByText('VFIAX')).toBeInTheDocument()
     expect(screen.getByText('FXAIX')).toBeInTheDocument()
+    expect(screen.getByTestId('comparison-table-scroll')).toBeInTheDocument()
   })
 
   it('renders all four breakdown rows for single fund', () => {

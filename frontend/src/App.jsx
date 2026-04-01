@@ -26,6 +26,21 @@ const cardStyle = { background: 'var(--card-bg)', border: '1px solid var(--card-
 const cardHeader = 'flex items-center justify-between mb-4'
 const cardTitle = 'text-base font-semibold m-0'
 const badgeBase = 'text-[0.7rem] font-semibold px-2.5 py-0.5 rounded-full border'
+const landingPillars = [
+  {
+    title: 'Side-by-side projections',
+    description: 'Compare up to five mutual funds using the same starting balance, contribution plan, and time horizon.',
+  },
+  {
+    title: 'Mutual-fund-first workflow',
+    description: 'The landing page is built around mutual fund performance comparison, with benchmark tickers only as optional context.',
+  },
+  {
+    title: 'Scenario-driven decisions',
+    description: 'Test goal amounts, monthly contributions, and risk tolerance to see how different funds may perform over time.',
+  },
+]
+const landingBadges = ['Compare up to 5 funds', 'CAPM-based estimates', 'Save comparison scenarios']
 
 function App() {
   const { theme, toggleTheme } = useTheme()
@@ -67,6 +82,10 @@ function App() {
 
   const isStale = calc.isStale(form.form)
   const narrative = calc.getNarrative(form.goalAmount, form.riskTolerance)
+  const calculatorHeading = dashboardMode ? 'Mutual Fund Comparison Setup' : 'Build Your Mutual Fund Comparison'
+  const calculatorDescription = dashboardMode
+    ? 'Adjust the funds or assumptions below and rerun the same comparison.'
+    : 'Select mutual funds, define the investing scenario, and compare projected performance side by side.'
 
   // Alerts
   const alerts = (
@@ -107,14 +126,19 @@ function App() {
       </div>
 
       {/* Full form — visible when expanded */}
-      <div className={`overflow-hidden transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${form.formCollapsed ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-[800px] opacity-100'}`}>
-        <div className={cardHeader}>
-          <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>Investment Parameters</h2>
+      <div className={`overflow-hidden transition-all duration-[800ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${form.formCollapsed ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-[1400px] opacity-100'}`}>
+        <div className={`${cardHeader} items-start gap-4`}>
+          <div>
+            <h2 className={cardTitle} style={{ color: 'var(--text-primary)' }}>{calculatorHeading}</h2>
+            <p className="mt-1 mb-0 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {calculatorDescription}
+            </p>
+          </div>
           <span className={`${badgeBase} ${calc.isCalculating
             ? 'bg-[#00244D]/[0.08] border-[#B5985A]/30'
             : 'bg-emerald-600/10 border-emerald-600/20'
-          }`} style={{ color: calc.isCalculating ? 'var(--accent)' : 'var(--success)' }}>
-            {calc.isCalculating ? 'Calculating…' : 'Ready'}
+          } shrink-0`} style={{ color: calc.isCalculating ? 'var(--accent)' : 'var(--success)' }}>
+            {calc.isCalculating ? 'Comparing…' : dashboardMode ? 'Ready' : 'Mutual fund tool'}
           </span>
         </div>
         <CalculatorForm
@@ -246,29 +270,68 @@ function App() {
       <ErrorBoundary>
       {!dashboardMode ? (
         <>
-          {/* Entry Mode */}
-          <section className="text-center pt-10 pb-5 px-8 animate-fade-in-up">
-            <h1 className="text-3xl max-md:text-2xl max-[480px]:text-xl font-bold tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
-              Mutual Fund Investment Calculator
-            </h1>
-            <p className="text-base max-w-[600px] mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              Select funds, enter your investment, and see projected returns using the Capital Asset Pricing Model.
-            </p>
-          </section>
-
-          {alerts}
-
           <main className="max-w-[1200px] mx-auto px-8 max-md:px-4 pb-12 w-full flex-1">
-            {calculatorCard}
-            {history.savedInvestments.length > 0 && (
-              <button
-                className="block mx-auto mt-6 px-6 py-3 bg-transparent border border-[var(--card-border)] rounded-xl text-sm cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--accent)] hover:bg-[rgba(181,152,90,0.06)]"
-                style={{ color: 'var(--accent)' }}
-                onClick={() => enterDashboard('history')}
-              >
-                View saved investments ({history.savedInvestments.length}) →
-              </button>
-            )}
+            {alerts}
+
+            <section className="relative grid gap-8 lg:grid-cols-[minmax(0,1.12fr)_420px] items-start pt-8">
+              <div className="absolute top-2 left-8 h-56 w-56 rounded-full blur-3xl max-md:left-0" style={{ background: 'rgba(181, 152, 90, 0.13)' }} aria-hidden="true" />
+              <div className="absolute bottom-6 left-[22%] h-48 w-48 rounded-full blur-3xl max-md:left-[8%]" style={{ background: 'rgba(126, 176, 213, 0.12)' }} aria-hidden="true" />
+
+              <div className="relative py-6 md:py-12 animate-fade-in-up">
+                <span
+                  className="inline-flex items-center rounded-full px-3 py-1 text-[0.72rem] font-semibold tracking-[0.14em] uppercase border"
+                  style={{ color: 'var(--accent)', borderColor: 'rgba(181, 152, 90, 0.28)', background: 'rgba(181, 152, 90, 0.06)' }}
+                >
+                  Mutual Fund Performance Comparison
+                </span>
+
+                <h1 className="mt-5 mb-4 max-w-[12ch] text-5xl leading-[0.96] font-bold tracking-[-0.04em] max-lg:text-4xl max-md:text-3xl" style={{ color: 'var(--text-primary)' }}>
+                  Compare mutual fund performance side by side.
+                </h1>
+
+                <p className="m-0 max-w-[640px] text-[1.02rem] leading-7 max-md:text-base max-md:leading-6" style={{ color: 'var(--text-secondary)' }}>
+                  Use this landing page to compare projected performance between mutual funds with the same investment amount, contribution schedule, and time horizon before committing capital.
+                </p>
+
+                <div className="mt-6 flex flex-wrap gap-3">
+                  {landingBadges.map((badge) => (
+                    <span
+                      key={badge}
+                      className="rounded-full px-3 py-1.5 text-[0.78rem] font-semibold"
+                      style={{ color: 'var(--text-primary)', background: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}
+                    >
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-10 grid gap-5 md:grid-cols-3">
+                  {landingPillars.map((pillar) => (
+                    <div key={pillar.title} className="pt-4" style={{ borderTop: '2px solid rgba(181, 152, 90, 0.35)' }}>
+                      <p className="m-0 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        {pillar.title}
+                      </p>
+                      <p className="mt-2 mb-0 text-sm leading-6" style={{ color: 'var(--text-secondary)' }}>
+                        {pillar.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 lg:sticky lg:top-[92px]">
+                {calculatorCard}
+                {history.savedInvestments.length > 0 && (
+                  <button
+                    className="w-full px-6 py-3 bg-transparent border border-[var(--card-border)] rounded-xl text-sm cursor-pointer transition-all hover:-translate-y-px hover:border-[var(--accent)] hover:bg-[rgba(181,152,90,0.06)]"
+                    style={{ color: 'var(--accent)' }}
+                    onClick={() => enterDashboard('history')}
+                  >
+                    Review saved comparisons ({history.savedInvestments.length}) →
+                  </button>
+                )}
+              </div>
+            </section>
           </main>
 
           <footer className="py-6 px-8 text-center text-sm" style={{ color: 'var(--text-muted)' }}>
