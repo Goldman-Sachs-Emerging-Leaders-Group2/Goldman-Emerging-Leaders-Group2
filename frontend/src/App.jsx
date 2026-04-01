@@ -10,6 +10,7 @@ import SummaryStats from './components/SummaryStats'
 import SaveBar from './components/SaveBar'
 import FormSummary from './components/FormSummary'
 import ErrorBoundary from './components/ErrorBoundary'
+import LearnPanel from './components/LearnPanel'
 
 import { useTheme } from './hooks/useTheme'
 import { useViewState } from './hooks/useViewState'
@@ -356,6 +357,7 @@ function App() {
             {activeView === 'results' && calculatorCard}
             {activeView === 'results' && resultsView}
             {activeView === 'history' && historyView}
+            {activeView === 'learn' && <LearnPanel />}
           </main>
         </>
       )}
