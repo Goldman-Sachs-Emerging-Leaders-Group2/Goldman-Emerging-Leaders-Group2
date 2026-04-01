@@ -147,27 +147,20 @@ export default function LearnPanel() {
                   <div className="text-sm text-[var(--text-secondary)]">Total Value after {years} years</div>
                   <div className="text-3xl font-bold text-[var(--success)]">${compoundData[compoundData.length - 1].total.toLocaleString()}</div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm text-[var(--text-secondary)]">Total Contributions</div>
-                  <div className="text-xl font-semibold text-[var(--text-primary)]">${compoundData[compoundData.length - 1].contributions.toLocaleString()}</div>
-                </div>
              </div>
              
              <div className="flex-1 flex items-end gap-1 min-h-[200px] mt-4 pt-4 border-t border-[var(--card-border)]">
                {compoundData.filter((_, i) => i % Math.ceil(years/20) === 0).map((data, i) => {
                   const maxVal = compoundData[compoundData.length - 1].total;
                   const heightPct = (data.total / maxVal) * 100;
-                  const baseHeightPct = (data.contributions / maxVal) * 100;
                   
                   return (
                     <div key={i} className="group relative flex-1 flex flex-col justify-end h-full">
                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 p-2 bg-[var(--card-bg)] border border-[var(--card-border)] rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
                          Year {data.year}<br/>
-                         Total: ${data.total.toLocaleString()}<br/>
-                         Contributed: ${data.contributions.toLocaleString()}
+                         Total: ${data.total.toLocaleString()}
                        </div>
                        <div className="w-full bg-[var(--success)] rounded-t-sm transition-all duration-300 opacity-80" style={{ height: `${heightPct}%` }}>
-                         <div className="w-full bg-[rgba(255,255,255,0.3)] inset-x-0 bottom-0 absolute" style={{ height: `${(baseHeightPct / heightPct) * 100}%` }} />
                        </div>
                     </div>
                   )
@@ -176,10 +169,6 @@ export default function LearnPanel() {
              <div className="flex justify-between text-xs text-[var(--text-muted)] mt-2 font-mono">
                <span>Year 0</span>
                <span>Year {years}</span>
-             </div>
-             <div className="flex gap-4 mt-4 text-[0.65rem] uppercase tracking-wider text-[var(--text-muted)]">
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[var(--success)] opacity-80 rounded-sm"></div> Growth</div>
-                <div className="flex items-center gap-1.5"><div className="w-3 h-3 bg-[rgba(255,255,255,0.3)] rounded-sm"></div> Principal & Contributions</div>
              </div>
           </div>
         </div>
