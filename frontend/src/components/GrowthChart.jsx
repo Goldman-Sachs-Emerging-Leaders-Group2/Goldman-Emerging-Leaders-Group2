@@ -23,23 +23,26 @@ const EnhancedTooltip = ({ active, payload, label, initialInvestment, isSingle }
   if (!active || !payload?.length) return null
 
   return (
-    <div className="rounded-lg p-3 text-sm shadow-lg" style={{ background: 'var(--card-bg, #fff)', border: '1px solid var(--card-border, #E5E7EB)' }}>
-      <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Year {label}</p>
-      {payload.map((entry) => {
-        if (isSingle) {
-          const gain = entry.value - initialInvestment
+    <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4 text-sm shadow-[var(--shadow-soft)]">
+      <p className="font-semibold text-[color:var(--text-primary)]">Year {label}</p>
+      <div className="mt-2 grid gap-2">
+        {payload.map((entry) => {
+          if (isSingle) {
+            const gain = entry.value - initialInvestment
+            return (
+              <p key={entry.dataKey} className="text-xs font-medium" style={{ color: entry.color }}>
+                {formatCurrency(entry.value)} {gain >= 0 ? `(+${formatCurrency(gain)})` : `(${formatCurrency(gain)})`}
+              </p>
+            )
+          }
+
           return (
-            <p key={entry.dataKey} className="text-xs" style={{ color: entry.color }}>
-              {formatCurrency(entry.value)} {gain >= 0 ? `(+${formatCurrency(gain)})` : `(${formatCurrency(gain)})`}
+            <p key={entry.dataKey} className="text-xs font-medium" style={{ color: entry.color }}>
+              {entry.dataKey}: {formatCurrency(entry.value)}
             </p>
           )
-        }
-        return (
-          <p key={entry.dataKey} className="text-xs" style={{ color: entry.color }}>
-            {entry.dataKey}: {formatCurrency(entry.value)}
-          </p>
-        )
-      })}
+        })}
+      </div>
     </div>
   )
 }
@@ -51,12 +54,8 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
 
   if (!hasResults) {
     return (
-      <div className="text-center py-10 border border-dashed rounded-lg" style={{ color: 'var(--text-muted)', borderColor: 'var(--card-border)' }}>
-        <p>
-          {isCalculating
-            ? 'Calculating projection…'
-            : 'Run a calculation to see projected growth.'}
-        </p>
+      <div className="northline-empty-state">
+        {isCalculating ? 'Building growth path…' : 'Build a comparison to see how each scenario compounds over time.'}
       </div>
     )
   }
@@ -64,103 +63,83 @@ const GrowthChart = ({ results, isCalculating, goalAmount }) => {
   const data = isMulti
     ? generateMultiProjectionData(results)
     : generateProjectionData(results[tickers[0]])
-
   const dataKeys = isMulti ? tickers : ['value']
   const goalValue = goalAmount ? Number(goalAmount) : null
 
   const firstResult = results[tickers[0]]
   const initialInvestment = firstResult?.initialInvestment ?? 0
-  const doubleValue = initialInvestment * 2
-  const maxProjected = isMulti
-    ? Math.max(...Object.values(results).map(r => r.futureValue))
-    : firstResult?.futureValue ?? 0
-  const showDouble = doubleValue && maxProjected >= doubleValue
 
   return (
     <div
-      data-testid="chart-container" className={`transition-opacity duration-300${isCalculating ? ' opacity-50' : ''}`}
+      data-testid="chart-container"
+      className={`transition-opacity duration-300 ${isCalculating ? 'opacity-50' : ''}`}
       aria-label="Projected investment growth chart"
     >
-      <ResponsiveContainer width="100%" height={320}>
-        <AreaChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
+      <ResponsiveContainer width="100%" height={340}>
+        <AreaChart data={data} margin={{ top: 10, right: 18, left: 4, bottom: 8 }}>
           <defs>
-            {dataKeys.map((key, i) => (
+            {dataKeys.map((key, index) => (
               <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={getFundColor(i)} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={getFundColor(i)} stopOpacity={0.02} />
+                <stop offset="0%" stopColor={getFundColor(index)} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={getFundColor(index)} stopOpacity={0.02} />
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid stroke="var(--card-border, #E5E7EB)" strokeDasharray="3 3" />
+          <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="4 6" vertical={false} />
           <XAxis
             dataKey="year"
-            tick={{ fill: 'var(--text-secondary, #4A5568)', fontSize: 12 }}
-            axisLine={{ stroke: 'var(--card-border, #E5E7EB)' }}
-            tickLine={{ stroke: 'var(--card-border, #E5E7EB)' }}
-            label={{ value: 'Year', position: 'insideBottomRight', offset: -5, fill: 'var(--text-secondary, #4A5568)', fontSize: 12 }}
+            tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
           />
           <YAxis
             tickFormatter={formatYAxisTick}
-            tick={{ fill: 'var(--text-secondary, #4A5568)', fontSize: 12 }}
-            axisLine={{ stroke: 'var(--card-border, #E5E7EB)' }}
-            tickLine={{ stroke: 'var(--card-border, #E5E7EB)' }}
-            width={65}
+            tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            width={70}
           />
           <Tooltip
             content={<EnhancedTooltip initialInvestment={initialInvestment} isSingle={!isMulti} />}
-            cursor={{ stroke: 'var(--text-muted, #8896A6)', strokeDasharray: '3 3' }}
+            cursor={{ stroke: 'var(--line-strong)', strokeDasharray: '4 6' }}
           />
           {isMulti && (
             <Legend
-              wrapperStyle={{ color: 'var(--text-secondary, #4A5568)', fontSize: 12, paddingTop: 8 }}
+              wrapperStyle={{ color: 'var(--text-secondary)', fontSize: 12, paddingTop: 10 }}
             />
           )}
-          {/* Total contributed line (your money, no growth) */}
           <Area
             type="monotone"
             dataKey="contributed"
-            stroke="var(--text-muted, #8896A6)"
-            strokeWidth={1}
+            stroke="var(--text-muted)"
+            strokeWidth={1.5}
             strokeDasharray="6 4"
             fill="none"
             dot={false}
             activeDot={false}
             name="Contributed"
-            isAnimationActive={true}
-            animationDuration={1200}
-            animationBegin={300}
+            animationDuration={900}
           />
-          {showDouble && (
-            <ReferenceLine
-              y={doubleValue}
-              stroke="var(--text-muted, #8896A6)"
-              strokeDasharray="4 4"
-              strokeWidth={1}
-              label={{ value: '2×', position: 'insideTopRight', fill: 'var(--text-muted, #8896A6)', fontSize: 10, dy: -6 }}
-            />
-          )}
           {goalValue > 0 && (
             <ReferenceLine
               y={goalValue}
-              stroke="#B5985A"
+              stroke="var(--accent)"
               strokeDasharray="6 4"
-              strokeWidth={2}
-              label={{ value: `Goal: ${formatYAxisTick(goalValue)}`, position: 'right', fill: '#B5985A', fontSize: 12 }}
+              strokeWidth={1.5}
+              label={{ value: `Goal ${formatYAxisTick(goalValue)}`, position: 'right', fill: 'var(--accent)', fontSize: 11 }}
             />
           )}
-          {dataKeys.map((key, i) => (
+          {dataKeys.map((key, index) => (
             <Area
               key={key}
               type="monotone"
               dataKey={key}
-              stroke={getFundColor(i)}
-              strokeWidth={2}
+              stroke={getFundColor(index)}
+              strokeWidth={2.2}
               fill={`url(#gradient-${key})`}
               dot={false}
-              activeDot={{ r: 6, fill: getFundColor(i), stroke: 'var(--card-bg, #fff)', strokeWidth: 2 }}
-              isAnimationActive={true}
-              animationDuration={1200}
-              animationBegin={300}
+              activeDot={{ r: 5, fill: getFundColor(index), stroke: 'var(--surface-strong)', strokeWidth: 2 }}
+              animationDuration={900}
             />
           ))}
         </AreaChart>

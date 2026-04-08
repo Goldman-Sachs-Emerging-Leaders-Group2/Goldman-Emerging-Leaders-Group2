@@ -4,6 +4,7 @@ import GrowthChart from './GrowthChart'
 
 const sampleResult = {
   initialInvestment: 10000,
+  totalContributed: 10000,
   capmReturn: 0.16658,
   years: 10,
   futureValue: 52345.67,
@@ -16,15 +17,15 @@ const sampleResult = {
 describe('GrowthChart', () => {
   it('shows empty state when no results', () => {
     render(<GrowthChart results={{}} isCalculating={false} />)
-    expect(screen.getByText(/Run a calculation to see projected growth/)).toBeInTheDocument()
+    expect(screen.getByText(/build a comparison to see how each scenario compounds over time/i)).toBeInTheDocument()
   })
 
   it('shows calculating message when loading without results', () => {
     render(<GrowthChart results={{}} isCalculating={true} />)
-    expect(screen.getByText(/Calculating projection/)).toBeInTheDocument()
+    expect(screen.getByText(/building growth path/i)).toBeInTheDocument()
   })
 
-  it('renders chart container with single result', () => {
+  it('renders chart container with a single result', () => {
     render(<GrowthChart results={{ VFIAX: sampleResult }} isCalculating={false} />)
     expect(screen.getByTestId('chart-container')).toBeInTheDocument()
   })

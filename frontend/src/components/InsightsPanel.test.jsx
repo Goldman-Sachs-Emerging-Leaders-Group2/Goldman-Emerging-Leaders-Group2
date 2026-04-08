@@ -16,12 +16,12 @@ const sampleResult = {
 describe('InsightsPanel', () => {
   it('shows empty state when no results', () => {
     render(<InsightsPanel results={{}} isCalculating={false} />)
-    expect(screen.getByText(/Run a calculation to see insights/)).toBeInTheDocument()
+    expect(screen.getByText(/build a comparison to unlock tailored guidance/i)).toBeInTheDocument()
   })
 
   it('shows calculating message when loading without results', () => {
     render(<InsightsPanel results={{}} isCalculating={true} />)
-    expect(screen.getByText(/Generating insights/)).toBeInTheDocument()
+    expect(screen.getByText(/gathering guidance/i)).toBeInTheDocument()
   })
 
   it('renders single-fund insights with one result', () => {

@@ -1,54 +1,76 @@
+const BrandMark = () => (
+  <span
+    className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[color:var(--line-strong)] bg-[color:var(--surface-strong)] shadow-[var(--shadow-soft)]"
+    aria-hidden="true"
+  >
+    <svg viewBox="0 0 24 24" className="h-5 w-5 text-[color:var(--navy)]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="7.5" />
+      <path d="M12 4.5v3.2" />
+      <path d="M12 16.3v3.2" />
+      <path d="m16.7 7.3-2.2 2.2" />
+      <path d="m9.5 14.5-2.2 2.2" />
+      <path d="M19.5 12h-3.2" />
+      <path d="M7.7 12H4.5" />
+      <path d="m16.7 16.7-5.1-5.1" />
+      <path d="m11.6 11.6 1.9-6.1" />
+    </svg>
+  </span>
+)
+
+const ThemeIcon = ({ theme }) => (
+  theme === 'light' ? (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3v2.5" />
+      <path d="M12 18.5V21" />
+      <path d="m5.64 5.64 1.77 1.77" />
+      <path d="m16.59 16.59 1.77 1.77" />
+      <path d="M3 12h2.5" />
+      <path d="M18.5 12H21" />
+      <path d="m5.64 18.36 1.77-1.77" />
+      <path d="m16.59 7.41 1.77-1.77" />
+      <circle cx="12" cy="12" r="4" />
+    </svg>
+  ) : (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 15.5A7.5 7.5 0 1 1 12.5 4a6.2 6.2 0 0 0 7.5 11.5Z" />
+    </svg>
+  )
+)
+
 export default function PageHeader({ theme, onToggleTheme, onLogoClick }) {
   return (
-    <header className="sticky top-0 z-100 bg-[#00244D] border-b-[3px] border-[#B5985A] shrink-0">
-      <div className="max-w-[1200px] mx-auto px-8 max-md:px-4 py-3 flex items-center justify-between">
-        {/* Brand */}
-        <div
-          className={`flex items-center gap-3 ${onLogoClick ? 'cursor-pointer' : ''}`}
+    <header className="relative z-30 border-b border-[color:var(--line)] bg-[color:var(--surface-elevated)]/92 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+        <button
+          type="button"
+          className="group flex items-center gap-3 border-none bg-transparent p-0 text-left"
           onClick={onLogoClick}
-          onKeyDown={onLogoClick ? (e) => e.key === 'Enter' && onLogoClick() : undefined}
-          role={onLogoClick ? 'button' : undefined}
-          tabIndex={onLogoClick ? 0 : undefined}
-          title={onLogoClick ? 'Back to calculator' : undefined}
         >
-          <div className="w-9 h-9 rounded-lg bg-[#B5985A] text-[#00244D] font-bold text-[0.85rem] flex items-center justify-center shrink-0">
-            GS
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base max-[480px]:text-[0.85rem] font-bold text-white leading-tight">
-              Goldman Sachs
+          <BrandMark />
+          <div className="min-w-0">
+            <span className="block text-[1rem] font-semibold leading-tight text-[color:var(--text-primary)]">
+              Northline
             </span>
-            <span className="text-[0.72rem] max-[480px]:hidden font-medium text-[#B5985A] tracking-[0.02em]">
-              Emerging Leaders Program
+            <span className="block text-[0.82rem] font-medium leading-tight text-[color:var(--text-secondary)]">
+              Plan with clarity.
             </span>
           </div>
-        </div>
+        </button>
 
-        {/* Right section */}
         <div className="flex items-center gap-3">
+          <div className="hidden items-center gap-2 rounded-full border border-[color:var(--line)] bg-[color:var(--surface)] px-3 py-2 text-xs text-[color:var(--text-secondary)] lg:flex">
+            <span className="h-2 w-2 rounded-full bg-[color:var(--signal)]" aria-hidden="true" />
+            Methodology is shown in plain language.
+          </div>
           <button
-            className="w-[34px] h-[34px] rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-[#B5985A] cursor-pointer transition-colors hover:bg-white/20"
+            type="button"
+            className="northline-button-secondary min-w-[9.5rem] px-3 text-sm"
             onClick={onToggleTheme}
-            aria-label="Toggle theme"
-            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            aria-label="Toggle color theme"
           >
-            {theme === 'light' ? (
-              <svg className="w-4 h-4 stroke-current" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            ) : (
-              <svg className="w-4 h-4 stroke-current" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            )}
+            <ThemeIcon theme={theme} />
+            <span>{theme === 'light' ? 'Dusk mode' : 'Day mode'}</span>
           </button>
-          <span className="text-[0.7rem] font-semibold text-[#B5985A] border border-[#B5985A]/40 rounded-full px-2.5 py-0.5">
-            Group 2
-          </span>
         </div>
       </div>
     </header>

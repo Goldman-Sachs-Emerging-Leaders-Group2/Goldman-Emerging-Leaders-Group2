@@ -30,12 +30,13 @@ export function useCalculation() {
     return Object.values(results).reduce((best, r) => r.capmReturn > best.capmReturn ? r : best)
   }, [results, hasResults])
 
-  const isStale = (form) => {
+  const isStale = (form, monthlyContribution = 0) => {
     if (!hasResults || !lastCalculatedForm) return false
     return (
       JSON.stringify([...form.tickers].sort()) !== JSON.stringify(lastCalculatedForm.tickers) ||
       Number(form.investment) !== lastCalculatedForm.investment ||
-      Number(form.years) !== lastCalculatedForm.years
+      Number(form.years) !== lastCalculatedForm.years ||
+      Number(monthlyContribution) !== lastCalculatedForm.monthlyContribution
     )
   }
 
@@ -83,6 +84,7 @@ export function useCalculation() {
         tickers: [...form.tickers].sort(),
         investment: Number(form.investment),
         years: Number(form.years),
+        monthlyContribution: Number(monthlyContribution) || 0,
       })
 
       return true
@@ -100,10 +102,35 @@ export function useCalculation() {
     setCalculationError('')
   }
 
+  const loadSavedResult = (investment) => {
+    const normalizedResult = {
+      ticker: investment.ticker,
+      fundName: investment.fundName,
+      initialInvestment: investment.initialInvestment,
+      monthlyContribution: investment.monthlyContribution || 0,
+      years: investment.years,
+      futureValue: investment.futureValue,
+      capmReturn: investment.capmReturn,
+      beta: investment.beta,
+      totalContributed: investment.totalContributed,
+      riskFreeRate: investment.riskFreeRate,
+      expectedMarketReturn: investment.expectedMarketReturn,
+    }
+
+    setResults({ [investment.ticker]: normalizedResult })
+    setLastCalculatedForm({
+      tickers: [investment.ticker],
+      investment: Number(investment.initialInvestment),
+      years: Number(investment.years),
+      monthlyContribution: Number(investment.monthlyContribution) || 0,
+    })
+    setCalculationError('')
+  }
+
   return {
     results, isCalculating, calculationError, setCalculationError,
     resultTickers, resultCount, hasResults, isMulti, primaryResult,
     bestResult, bestCapmResult,
-    isStale, getNarrative, calculate, reset,
+    isStale, getNarrative, calculate, reset, loadSavedResult,
   }
 }

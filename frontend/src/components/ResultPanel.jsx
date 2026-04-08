@@ -7,140 +7,96 @@ import { useCountUp } from '../hooks/useCountUp'
 import ComparisonTable from './ComparisonTable'
 
 const HELP_TEXT = {
-  capm: 'The expected annual return predicted by the Capital Asset Pricing Model',
-  market: "The fund's historical average annual return",
-  riskFree: 'The return on a risk-free investment (US Treasury rate)',
-  beta: 'How volatile this fund is compared to the S&P 500. Beta > 1 means more volatile.',
+  capm: 'The expected annual return estimated by the Capital Asset Pricing Model.',
+  market: 'The historical market return being used as the comparison baseline.',
+  riskFree: 'The Treasury-style baseline used to represent a risk-free return.',
+  beta: 'How sensitive this fund is to market swings compared with the S&P 500.',
 }
 
 const HelpIcon = ({ text }) => (
   <span
-    className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[0.6rem] font-bold shrink-0 cursor-help transition-[background,color] duration-150 hover:text-[#00244D]"
-    style={{
-      background: 'var(--card-border)',
-      color: 'var(--text-muted)',
-    }}
+    className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[color:var(--line)] text-[0.7rem] font-semibold text-[color:var(--text-muted)]"
     title={text}
   >
     ?
   </span>
 )
 
-const DOT_COLORS = {
-  blue: '#4A90C4',
-  green: 'var(--success)',
-  amber: 'var(--accent)',
-  purple: '#9B8ABF',
-}
-
-const RISK_FILL_COLORS = {
-  low: 'var(--success)',
-  moderate: 'var(--accent)',
-  high: '#E87040',
-}
-
-const ANIMATION_DELAYS = ['1.1s', '1.2s', '1.3s', '1.4s']
-
-const BreakdownRow = ({ color, label, helpText, children, index }) => (
-  <div
-    className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-3 py-2.5 rounded-lg border transition-[background] duration-150 animate-slide-in-left"
-    style={{
-      background: 'var(--bg)',
-      borderColor: 'var(--card-border)',
-      animationDelay: ANIMATION_DELAYS[index] || '0s',
-      animationFillMode: 'both',
-    }}
-    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--accent)' }}
-    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--card-border)' }}
-  >
+const BreakdownRow = ({ label, helpText, children }) => (
+  <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-4 py-3">
     <div className="flex min-w-0 flex-1 items-center gap-2">
-      <div
-        className="w-2 h-2 rounded-full shrink-0"
-        style={{ background: DOT_COLORS[color] }}
-      />
-      <span className="min-w-0 text-sm leading-snug" style={{ color: 'var(--text-secondary)' }}>
-        {label}
-      </span>
+      <span className="text-sm font-medium text-[color:var(--text-secondary)]">{label}</span>
       <HelpIcon text={helpText} />
     </div>
-    {children}
+    <div className="text-sm font-semibold text-[color:var(--text-primary)]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+      {children}
+    </div>
   </div>
 )
 
-const BreakdownValue = ({ children }) => (
-  <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)', fontVariantNumeric: 'tabular-nums' }}>
-    {children}
-  </span>
+const ResultMetric = ({ label, value }) => (
+  <div className="rounded-[22px] border border-white/10 bg-white/6 px-4 py-3">
+    <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--hero-muted)]">
+      {label}
+    </span>
+    <span className="mt-2 block text-lg font-semibold text-[color:var(--hero-text)]">
+      {value}
+    </span>
+  </div>
 )
 
 const SingleResult = ({ result }) => {
   const animatedValue = useCountUp(result.futureValue)
-
-  const riskLevel = result.beta < 0.8 ? 'low' : result.beta <= 1.2 ? 'moderate' : 'high'
-  const riskLabel = result.beta < 0.8 ? 'Conservative' : result.beta <= 1.2 ? 'Moderate' : 'Aggressive'
+  const totalContributed = result.totalContributed || result.initialInvestment
+  const netGrowth = result.futureValue - totalContributed
+  const riskLevel = result.beta < 0.8 ? 'Conservative' : result.beta <= 1.2 ? 'Moderate' : 'Aggressive'
+  const riskWidth = Math.min((result.beta / 2) * 100, 100)
 
   return (
-    <div className="grid gap-3.5 transition-opacity duration-300" aria-live="polite">
-      <p className="text-sm font-medium m-0" style={{ color: 'var(--text-secondary)' }}>
-        {result.fundName || 'Unknown Fund'}
-      </p>
+    <div className="grid gap-5 transition-opacity duration-300" aria-live="polite">
+      <div className="rounded-[28px] border border-[color:var(--hero-border)] bg-[image:var(--hero-bg)] p-6 shadow-[var(--shadow-soft)]">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--hero-muted)]">
+              Lead projection
+            </p>
+            <h3 className="mt-3 text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--hero-text)]">
+              {result.fundName || 'Unknown Fund'}
+            </h3>
+            <p className="mt-2 text-sm text-[color:var(--hero-muted)]">
+              {result.ticker || 'Saved scenario'} · {result.years} year plan
+            </p>
+          </div>
 
-      <div
-        className="rounded-[10px] px-6 py-5 border backdrop-blur-[8px]"
-        style={{
-          background: 'var(--hero-card-bg)',
-          borderColor: 'var(--hero-card-border)',
-        }}
-      >
-        <span
-          className="text-xs font-semibold uppercase tracking-[0.06em]"
-          style={{ color: 'var(--hero-card-muted)' }}
-        >
-          Future Value
-        </span>
-        <div
-          className="text-[2.2rem] font-bold leading-[1.2] mt-1 mb-1.5"
-          style={{ color: 'var(--hero-card-text)' }}
-        >
-          {formatCurrency(animatedValue)}
+          <div className="rounded-full border border-white/12 bg-white/6 px-4 py-2 text-sm font-semibold text-[color:var(--hero-text)]">
+            {formatCurrency(animatedValue)}
+          </div>
         </div>
-        <p className="m-0 text-sm" style={{ color: 'var(--hero-card-muted)' }}>
-          {formatCurrency(result.initialInvestment)} invested over {result.years ?? '\u2014'} years
-        </p>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <ResultMetric label="Projected value" value={formatCurrency(animatedValue)} />
+          <ResultMetric label="Total contributed" value={formatCurrency(totalContributed)} />
+          <ResultMetric label="Net growth" value={formatCurrency(netGrowth)} />
+        </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <BreakdownRow color="blue" label="CAPM Return" helpText={HELP_TEXT.capm} index={0}>
-          <BreakdownValue>{formatPercent(result.capmReturn)}</BreakdownValue>
+      <div className="grid gap-3">
+        <BreakdownRow label="Expected return (CAPM)" helpText={HELP_TEXT.capm}>
+          {formatPercent(result.capmReturn)}
         </BreakdownRow>
-
-        <BreakdownRow color="green" label="Expected Market Return" helpText={HELP_TEXT.market} index={1}>
-          <BreakdownValue>{formatPercent(result.expectedMarketReturn)}</BreakdownValue>
+        <BreakdownRow label="Observed market return" helpText={HELP_TEXT.market}>
+          {formatPercent(result.expectedMarketReturn)}
         </BreakdownRow>
-
-        <BreakdownRow color="amber" label="Risk-Free Rate" helpText={HELP_TEXT.riskFree} index={2}>
-          <BreakdownValue>{formatPercent(result.riskFreeRate)}</BreakdownValue>
+        <BreakdownRow label="Treasury baseline" helpText={HELP_TEXT.riskFree}>
+          {formatPercent(result.riskFreeRate)}
         </BreakdownRow>
-
-        <BreakdownRow color="purple" label="Beta" helpText={HELP_TEXT.beta} index={3}>
-          <div className="flex items-center gap-2.5">
-            <div
-              className="w-[60px] h-1.5 rounded-full overflow-hidden shrink-0"
-              style={{ background: 'var(--card-border)' }}
-            >
-              <div
-                className="h-full rounded-full transition-[width] duration-500"
-                style={{
-                  width: `${Math.min((result.beta / 2) * 100, 100)}%`,
-                  background: RISK_FILL_COLORS[riskLevel],
-                  transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-              />
-            </div>
-            <BreakdownValue>
-              {formatDecimal(result.beta, 2)} &middot; {riskLabel}
-            </BreakdownValue>
-          </div>
+        <BreakdownRow label="Volatility vs. S&P 500" helpText={HELP_TEXT.beta}>
+          <span className="inline-flex items-center gap-3">
+            <span className="h-2 w-16 overflow-hidden rounded-full bg-[color:var(--line)]">
+              <span className="block h-full rounded-full bg-[color:var(--signal)]" style={{ width: `${riskWidth}%` }} />
+            </span>
+            <span>{formatDecimal(result.beta, 2)} · {riskLevel}</span>
+          </span>
         </BreakdownRow>
       </div>
     </div>
@@ -154,18 +110,10 @@ const ResultPanel = ({ results, isCalculating, riskTolerance }) => {
 
   if (!hasResults) {
     return (
-      <div
-        className="border border-dashed rounded-lg py-8 px-6 text-sm text-center"
-        style={{
-          borderColor: 'var(--card-border)',
-          color: 'var(--text-muted)',
-        }}
-      >
-        <p>
-          {isCalculating
-            ? 'Calculating projected outcomes\u2026'
-            : 'Run a calculation to view projected outcomes and CAPM metrics.'}
-        </p>
+      <div className="northline-empty-state">
+        {isCalculating
+          ? 'Building comparison details…'
+          : 'Build a comparison to review projected values, CAPM metrics, and risk signals.'}
       </div>
     )
   }

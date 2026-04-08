@@ -1,20 +1,30 @@
 import { useState } from 'react'
 
+const VALID_VIEWS = new Set(['home', 'plan', 'results', 'saved', 'learn'])
+
 export function useViewState() {
-  const [dashboardMode, setDashboardMode] = useState(false)
-  const [activeView, setActiveView] = useState('results')
+  const [activeView, setActiveView] = useState('home')
 
-  const enterDashboard = (view = 'results') => {
-    setDashboardMode(true)
-    setActiveView(view)
+  const navigateTo = (view) => {
+    if (VALID_VIEWS.has(view)) {
+      setActiveView(view)
+    }
   }
 
-  const navigateTo = (view) => setActiveView(view)
+  const startPlan = () => setActiveView('plan')
+  const showResults = () => setActiveView('results')
+  const showSaved = () => setActiveView('saved')
+  const showLearn = () => setActiveView('learn')
+  const goHome = () => setActiveView('home')
 
-  const exitDashboard = () => {
-    setDashboardMode(false)
-    setActiveView('results')
+  return {
+    activeView,
+    dashboardMode: activeView !== 'home',
+    navigateTo,
+    startPlan,
+    showResults,
+    showSaved,
+    showLearn,
+    goHome,
   }
-
-  return { dashboardMode, activeView, enterDashboard, navigateTo, exitDashboard }
 }

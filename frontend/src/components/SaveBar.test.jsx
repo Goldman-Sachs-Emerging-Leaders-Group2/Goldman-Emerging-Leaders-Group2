@@ -12,28 +12,28 @@ describe('SaveBar', () => {
     resultCount: 1,
   }
 
-  it('renders input and save button', () => {
+  it('renders the label input and save button', () => {
     render(<SaveBar {...defaultProps} />)
-    expect(screen.getByPlaceholderText(/label/i)).toBeInTheDocument()
-    expect(screen.getByText('Save Result')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/scenario label/i)).toBeInTheDocument()
+    expect(screen.getByText('Save scenario')).toBeInTheDocument()
   })
 
   it('shows plural button text for multiple results', () => {
     render(<SaveBar {...defaultProps} resultCount={3} />)
-    expect(screen.getByText('Save Results')).toBeInTheDocument()
+    expect(screen.getByText('Save scenarios')).toBeInTheDocument()
   })
 
-  it('calls onSave when button clicked', async () => {
+  it('calls onSave when the button is clicked', async () => {
     const onSave = vi.fn()
     render(<SaveBar {...defaultProps} onSave={onSave} />)
-    await userEvent.click(screen.getByText('Save Result'))
+    await userEvent.click(screen.getByText('Save scenario'))
     expect(onSave).toHaveBeenCalled()
   })
 
   it('calls onSave on Enter key', async () => {
     const onSave = vi.fn()
     render(<SaveBar {...defaultProps} onSave={onSave} />)
-    const input = screen.getByPlaceholderText(/label/i)
+    const input = screen.getByPlaceholderText(/scenario label/i)
     await userEvent.type(input, '{Enter}')
     expect(onSave).toHaveBeenCalled()
   })
@@ -45,10 +45,10 @@ describe('SaveBar', () => {
 
   it('shows saved state', () => {
     render(<SaveBar {...defaultProps} saveStatus="saved" />)
-    expect(screen.getByText(/saved/i)).toBeInTheDocument()
+    expect(screen.getByText(/^saved$/i)).toBeInTheDocument()
   })
 
-  it('disables button while saving', () => {
+  it('disables the button while saving', () => {
     render(<SaveBar {...defaultProps} saveStatus="saving" />)
     expect(screen.getByText(/saving/i).closest('button')).toBeDisabled()
   })

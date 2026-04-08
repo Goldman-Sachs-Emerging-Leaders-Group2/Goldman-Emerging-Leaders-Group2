@@ -1,47 +1,51 @@
 export default function SaveBar({ label, onLabelChange, onSave, saveStatus, resultCount, error }) {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') onSave()
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter') onSave()
   }
 
   const isSaving = saveStatus === 'saving'
   const isSaved = saveStatus === 'saved'
 
   return (
-    <div
-      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-5 rounded-lg"
-      style={{
-        background: 'var(--card-bg, #fff)',
-        border: '1px solid var(--card-border, #E2E8F0)',
-      }}
-    >
-      <input
-        type="text"
-        className="flex-1 px-3 py-2.5 rounded-lg text-sm outline-none transition-colors duration-200 border border-[var(--card-border,#E2E8F0)] focus:border-[var(--accent,#B5985A)]"
-        style={{
-          background: 'var(--input-bg, #fff)',
-          color: 'var(--text-primary, #00244D)',
-        }}
-        placeholder="Label (optional) — e.g., Retirement plan"
-        value={label}
-        onChange={(e) => onLabelChange(e.target.value)}
-        onKeyDown={handleKeyDown}
-      />
-      <button
-        className={`px-5 py-2.5 text-white text-sm font-semibold rounded-lg whitespace-nowrap cursor-pointer transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed hover:enabled:-translate-y-px ${
-          isSaved ? 'bg-emerald-600' : ''
-        }`}
-        style={!isSaved ? { background: 'var(--accent, #B5985A)' } : undefined}
-        onClick={onSave}
-        disabled={isSaving}
-      >
-        {isSaving
-          ? 'Saving\u2026'
-          : isSaved
-            ? '\u2713 Saved'
-            : `Save Result${resultCount > 1 ? 's' : ''}`}
-      </button>
+    <div className="northline-card rounded-[28px] p-5 sm:p-6">
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="max-w-[44ch]">
+          <p className="northline-eyebrow mb-2">Save your work</p>
+          <h3 className="text-xl font-semibold tracking-[-0.02em] text-[color:var(--text-primary)]">
+            Keep this comparison for later.
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
+            Save {resultCount > 1 ? 'these scenarios' : 'this scenario'} with a label so you can reopen the results and compare them later.
+          </p>
+        </div>
+
+        <div className="flex w-full flex-col gap-3 xl:max-w-[540px] xl:flex-row">
+          <input
+            type="text"
+            className="northline-input flex-1"
+            placeholder="Scenario label, for example First home plan"
+            value={label}
+            onChange={(event) => onLabelChange(event.target.value)}
+            onKeyDown={handleKeyDown}
+            aria-label="Scenario label"
+          />
+          <button
+            type="button"
+            className={isSaved ? 'northline-button-secondary justify-center' : 'northline-button-primary justify-center'}
+            onClick={onSave}
+            disabled={isSaving}
+          >
+            {isSaving
+              ? 'Saving…'
+              : isSaved
+                ? 'Saved'
+                : `Save ${resultCount > 1 ? 'scenarios' : 'scenario'}`}
+          </button>
+        </div>
+      </div>
+
       {error && (
-        <p className="text-xs text-red-500 w-full sm:w-auto">{error}</p>
+        <p className="mt-4 text-sm text-[color:var(--error)]">{error}</p>
       )}
     </div>
   )

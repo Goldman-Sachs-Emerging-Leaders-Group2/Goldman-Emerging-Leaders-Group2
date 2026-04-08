@@ -30,37 +30,37 @@ describe('InvestmentHistory', () => {
 
   it('shows loading state', () => {
     render(<InvestmentHistory {...defaultProps} isLoading={true} />)
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(screen.getByText(/loading saved scenarios/i)).toBeInTheDocument()
   })
 
   it('shows empty state when no investments', () => {
     render(<InvestmentHistory {...defaultProps} />)
-    expect(screen.getByText(/no saved investments/i)).toBeInTheDocument()
+    expect(screen.getByText(/no saved scenarios yet/i)).toBeInTheDocument()
   })
 
-  it('renders table with investment data', () => {
+  it('renders card details for an investment', () => {
     render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />)
-    expect(screen.getByText('VFIAX')).toBeInTheDocument()
+    expect(screen.getByText(/VFIAX · Vanguard 500 Index Fund/)).toBeInTheDocument()
     expect(screen.getByText('Retirement')).toBeInTheDocument()
-    expect(screen.getByText('$10,000.00')).toBeInTheDocument()
+    expect(screen.getAllByText('$10,000.00').length).toBeGreaterThan(0)
   })
 
   it('renders action buttons', () => {
     render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />)
-    expect(screen.getByTitle('Load these parameters into the calculator')).toBeInTheDocument()
-    expect(screen.getByTitle('Delete')).toBeInTheDocument()
+    expect(screen.getByTitle('Open in results')).toBeInTheDocument()
+    expect(screen.getByTitle('Delete scenario')).toBeInTheDocument()
   })
 
-  it('calls onRerun when re-run button clicked', async () => {
+  it('calls onRerun when open in results is clicked', async () => {
     const onRerun = vi.fn()
     render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} onRerun={onRerun} />)
-    await userEvent.click(screen.getByTitle('Load these parameters into the calculator'))
+    await userEvent.click(screen.getByTitle('Open in results'))
     expect(onRerun).toHaveBeenCalledWith(sampleInvestment)
   })
 
   it('shows delete confirmation on first click', async () => {
     render(<InvestmentHistory {...defaultProps} investments={[sampleInvestment]} />)
-    await userEvent.click(screen.getByTitle('Delete'))
-    expect(screen.getByText('Sure?')).toBeInTheDocument()
+    await userEvent.click(screen.getByTitle('Delete scenario'))
+    expect(screen.getByText('Confirm delete')).toBeInTheDocument()
   })
 })

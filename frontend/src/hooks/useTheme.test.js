@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useTheme } from './useTheme'
 
@@ -8,39 +8,35 @@ beforeEach(() => {
 })
 
 describe('useTheme', () => {
-  it('defaults to light when no localStorage value', () => {
+  it('defaults to light when no localStorage value exists', () => {
     const { result } = renderHook(() => useTheme())
     expect(result.current.theme).toBe('light')
   })
 
-  it('reads initial theme from localStorage', () => {
+  it('reads the initial theme from Northline localStorage', () => {
+    localStorage.setItem('northline-theme', 'dark')
+    const { result } = renderHook(() => useTheme())
+    expect(result.current.theme).toBe('dark')
+  })
+
+  it('falls back to the legacy Goldman theme key', () => {
     localStorage.setItem('gs-theme', 'dark')
     const { result } = renderHook(() => useTheme())
     expect(result.current.theme).toBe('dark')
   })
 
-  it('toggles theme between light and dark', () => {
+  it('toggles between light and dark', () => {
     const { result } = renderHook(() => useTheme())
-    expect(result.current.theme).toBe('light')
-
     act(() => result.current.toggleTheme())
     expect(result.current.theme).toBe('dark')
-
     act(() => result.current.toggleTheme())
     expect(result.current.theme).toBe('light')
   })
 
-  it('persists theme to localStorage on change', () => {
+  it('persists the theme to Northline localStorage and document', () => {
     const { result } = renderHook(() => useTheme())
     act(() => result.current.toggleTheme())
-    expect(localStorage.getItem('gs-theme')).toBe('dark')
-  })
-
-  it('sets data-theme attribute on document element', () => {
-    const { result } = renderHook(() => useTheme())
-    expect(document.documentElement.getAttribute('data-theme')).toBe('light')
-
-    act(() => result.current.toggleTheme())
+    expect(localStorage.getItem('northline-theme')).toBe('dark')
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark')
   })
 })

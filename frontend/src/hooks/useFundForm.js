@@ -13,6 +13,10 @@ export function useFundForm() {
   const [formCollapsed, setFormCollapsed] = useState(false)
   const [customTickers, setCustomTickers] = useState([])
 
+  const getDefaultTickerSelection = (availableFunds = funds) => (
+    availableFunds.length > 0 ? [availableFunds[0].ticker] : []
+  )
+
   useEffect(() => {
     const loadFunds = async () => {
       setIsLoadingFunds(true)
@@ -20,9 +24,7 @@ export function useFundForm() {
       try {
         const data = await getMutualFunds()
         setFunds(data)
-        if (data.length > 0) {
-          setForm(prev => ({ ...prev, tickers: [data[0].ticker] }))
-        }
+        setForm((prev) => ({ ...prev, tickers: prev.tickers.length > 0 ? prev.tickers : getDefaultTickerSelection(data) }))
       } catch (error) {
         setLoadError(error.message || 'Unable to load mutual funds.')
       } finally {
@@ -69,6 +71,20 @@ export function useFundForm() {
 
   const handleRiskToleranceChange = (e) => setRiskTolerance(Number(e.target.value))
 
+  const resetPlanner = () => {
+    setForm({
+      tickers: getDefaultTickerSelection(),
+      investment: '10000',
+      years: '10',
+    })
+    setFieldErrors({})
+    setGoalAmount('')
+    setMonthlyContribution('0')
+    setRiskTolerance(5)
+    setFormCollapsed(false)
+    setCustomTickers([])
+  }
+
   const validateForm = () => {
     const errors = {}
     if (form.tickers.length === 0) errors.tickers = 'Please select at least one mutual fund.'
@@ -93,6 +109,7 @@ export function useFundForm() {
   }
 
   const populateFrom = (inv) => {
+    const isKnownFund = funds.some((fund) => fund.ticker === inv.ticker)
     setForm({
       tickers: [inv.ticker],
       investment: String(inv.initialInvestment),
@@ -100,7 +117,10 @@ export function useFundForm() {
     })
     setMonthlyContribution(String(inv.monthlyContribution || 0))
     setGoalAmount('')
+    setFieldErrors({})
+    setRiskTolerance(5)
     setFormCollapsed(false)
+    setCustomTickers(isKnownFund ? [] : [inv.ticker])
   }
 
   return {
@@ -110,6 +130,6 @@ export function useFundForm() {
     handleChange, handleToggleTicker,
     handleAddCustomTicker, handleRemoveCustomTicker,
     handleGoalChange, handleMonthlyChange, handleRiskToleranceChange,
-    validateForm, cleanupFailedTickers, populateFrom,
+    validateForm, cleanupFailedTickers, populateFrom, resetPlanner,
   }
 }

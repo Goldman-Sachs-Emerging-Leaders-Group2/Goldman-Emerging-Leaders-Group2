@@ -4,31 +4,28 @@ import userEvent from '@testing-library/user-event'
 import PageHeader from './PageHeader'
 
 describe('PageHeader', () => {
-  it('renders Goldman Sachs branding', () => {
-    render(<PageHeader theme="light" onToggleTheme={() => {}} />)
-    expect(screen.getByText('Goldman Sachs')).toBeInTheDocument()
-    expect(screen.getByText('Emerging Leaders Program')).toBeInTheDocument()
-    expect(screen.getByText('GS')).toBeInTheDocument()
-    expect(screen.getByText('Group 2')).toBeInTheDocument()
+  it('renders Northline branding', () => {
+    render(<PageHeader theme="light" onToggleTheme={() => {}} onLogoClick={() => {}} />)
+    expect(screen.getByText('Northline')).toBeInTheDocument()
+    expect(screen.getByText('Plan with clarity.')).toBeInTheDocument()
   })
 
-  it('calls onToggleTheme when theme button clicked', async () => {
+  it('calls onToggleTheme when theme button is clicked', async () => {
     const onToggle = vi.fn()
-    render(<PageHeader theme="light" onToggleTheme={onToggle} />)
-    await userEvent.click(screen.getByLabelText('Toggle theme'))
+    render(<PageHeader theme="light" onToggleTheme={onToggle} onLogoClick={() => {}} />)
+    await userEvent.click(screen.getByLabelText('Toggle color theme'))
     expect(onToggle).toHaveBeenCalled()
   })
 
   it('calls onLogoClick when brand is clicked', async () => {
     const onClick = vi.fn()
     render(<PageHeader theme="light" onToggleTheme={() => {}} onLogoClick={onClick} />)
-    await userEvent.click(screen.getByText('Goldman Sachs'))
+    await userEvent.click(screen.getByRole('button', { name: /northline/i }))
     expect(onClick).toHaveBeenCalled()
   })
 
-  it('brand is not clickable when onLogoClick is undefined', () => {
-    render(<PageHeader theme="light" onToggleTheme={() => {}} />)
-    const brand = screen.getByText('Goldman Sachs').closest('div')
-    expect(brand).not.toHaveAttribute('role', 'button')
+  it('shows dusk mode copy when the theme is light', () => {
+    render(<PageHeader theme="light" onToggleTheme={() => {}} onLogoClick={() => {}} />)
+    expect(screen.getByText('Dusk mode')).toBeInTheDocument()
   })
 })

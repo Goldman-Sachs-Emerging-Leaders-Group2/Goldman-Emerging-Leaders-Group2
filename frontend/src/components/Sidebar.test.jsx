@@ -5,68 +5,54 @@ import Sidebar from './Sidebar'
 
 describe('Sidebar', () => {
   const defaultProps = {
-    activeView: 'results',
+    activeView: 'home',
     onNavigate: vi.fn(),
     savedCount: 0,
     onNewAnalysis: vi.fn(),
+    hasResults: true,
   }
 
-  it('renders all nav items', () => {
+  it('renders the tabbed navigation', () => {
     render(<Sidebar {...defaultProps} />)
+    expect(screen.getByText('Home')).toBeInTheDocument()
+    expect(screen.getByText('Plan')).toBeInTheDocument()
     expect(screen.getByText('Results')).toBeInTheDocument()
-    expect(screen.getByText('History')).toBeInTheDocument()
-    expect(screen.getByText('AI Advisor')).toBeInTheDocument()
+    expect(screen.getByText('Saved')).toBeInTheDocument()
+    expect(screen.getByText('Learn')).toBeInTheDocument()
   })
 
-  it('highlights the active item', () => {
-    render(<Sidebar {...defaultProps} activeView="history" />)
-    const historyBtn = screen.getByText('History').closest('button')
-    expect(historyBtn.className).toContain('font-semibold')
+  it('marks the active item', () => {
+    render(<Sidebar {...defaultProps} activeView="saved" />)
+    const savedButton = screen.getByRole('button', { name: 'Saved' })
+    expect(savedButton.className).toContain('is-active')
   })
 
-  it('calls onNavigate when a nav item is clicked', async () => {
+  it('calls onNavigate when a tab is clicked', async () => {
     const onNavigate = vi.fn()
     render(<Sidebar {...defaultProps} onNavigate={onNavigate} />)
-
-    await userEvent.click(screen.getByText('History'))
-    expect(onNavigate).toHaveBeenCalledWith('history')
+    await userEvent.click(screen.getByRole('button', { name: 'Plan' }))
+    expect(onNavigate).toHaveBeenCalledWith('plan')
   })
 
-  it('shows saved count badge on History', () => {
+  it('shows the saved count badge when there are saved scenarios', () => {
     render(<Sidebar {...defaultProps} savedCount={5} />)
     expect(screen.getByText('5')).toBeInTheDocument()
   })
 
-  it('does not show badge when savedCount is 0', () => {
-    render(<Sidebar {...defaultProps} savedCount={0} />)
-    expect(screen.queryByText('0')).not.toBeInTheDocument()
+  it('disables the results tab until a comparison exists', () => {
+    render(<Sidebar {...defaultProps} hasResults={false} activeView="home" />)
+    expect(screen.getByRole('button', { name: 'Results' })).toBeDisabled()
   })
 
-  it('disables AI Advisor item', () => {
+  it('renders the new plan button', () => {
     render(<Sidebar {...defaultProps} />)
-    const aiBtn = screen.getByText('AI Advisor').closest('button')
-    expect(aiBtn).toBeDisabled()
-    expect(screen.getByText('Soon')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /new plan/i })).toBeInTheDocument()
   })
 
-  it('does not navigate when disabled item is clicked', async () => {
-    const onNavigate = vi.fn()
-    render(<Sidebar {...defaultProps} onNavigate={onNavigate} />)
-
-    await userEvent.click(screen.getByText('AI Advisor'))
-    expect(onNavigate).not.toHaveBeenCalled()
-  })
-
-  it('renders New Analysis button', () => {
-    render(<Sidebar {...defaultProps} />)
-    expect(screen.getByText('+ New Analysis')).toBeInTheDocument()
-  })
-
-  it('calls onNewAnalysis when New Analysis is clicked', async () => {
+  it('calls onNewAnalysis when new plan is clicked', async () => {
     const onNewAnalysis = vi.fn()
     render(<Sidebar {...defaultProps} onNewAnalysis={onNewAnalysis} />)
-
-    await userEvent.click(screen.getByText('+ New Analysis'))
+    await userEvent.click(screen.getByRole('button', { name: /new plan/i }))
     expect(onNewAnalysis).toHaveBeenCalled()
   })
 })

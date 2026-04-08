@@ -1,30 +1,23 @@
 import { formatCurrency, formatPercent } from '../utils/formatters'
 
-const statCardBase =
-  'flex flex-col gap-0.5 rounded-xl animate-[scaleIn_0.8s_cubic-bezier(0.16,1,0.3,1)_both]'
-
 const stats = [
   {
     key: 'futureValue',
-    label: 'Best Future Value',
-    delay: '0s',
+    label: 'Projected leader',
     getValue: (props) => formatCurrency(props.bestResult?.futureValue),
-    getSub: (props) => props.bestResult?.fundName,
+    getSub: (props) => props.bestResult?.fundName || 'No fund selected',
   },
   {
     key: 'capmReturn',
-    label: 'Best CAPM Return',
-    delay: '0.12s',
+    label: 'Highest CAPM signal',
     getValue: (props) => formatPercent(props.bestCapmResult?.capmReturn),
-    getSub: (props) => props.bestCapmResult?.fundName,
+    getSub: (props) => props.bestCapmResult?.fundName || 'No fund selected',
   },
   {
     key: 'count',
-    label: 'Funds Compared',
-    delay: '0.24s',
+    label: 'Funds in scope',
     getValue: (props) => props.resultCount,
-    getSub: (props) =>
-      props.resultCount === 1 ? 'single fund' : 'multi-fund comparison',
+    getSub: (props) => props.resultCount === 1 ? 'Single scenario' : 'Side-by-side comparison',
   },
 ]
 
@@ -32,39 +25,21 @@ export default function SummaryStats({ bestResult, bestCapmResult, resultCount }
   const props = { bestResult, bestCapmResult, resultCount }
 
   return (
-    <div
-      className="grid grid-cols-1 sm:grid-cols-3 gap-4 animate-[fadeInUp_0.4s_ease-out]"
-      id="results-section"
-    >
-      {stats.map((s) => (
+    <div className="grid gap-4 md:grid-cols-3" id="results-section">
+      {stats.map((stat) => (
         <div
-          key={s.key}
-          className={statCardBase}
-          style={{
-            background: 'var(--hero-card-bg)',
-            border: '1px solid var(--hero-card-border)',
-            padding: '1.25rem',
-            animationDelay: s.delay,
-          }}
+          key={stat.key}
+          className="rounded-[28px] border border-[color:var(--line)] bg-[image:var(--hero-bg)] p-5 shadow-[var(--shadow-soft)]"
         >
-          <span
-            className="text-[0.7rem] font-semibold uppercase tracking-wide"
-            style={{ color: 'var(--hero-card-muted)' }}
-          >
-            {s.label}
+          <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[color:var(--hero-muted)]">
+            {stat.label}
           </span>
-          <span
-            className="text-2xl font-bold leading-tight"
-            style={{ color: 'var(--hero-card-text)', fontVariantNumeric: 'tabular-nums' }}
-          >
-            {s.getValue(props)}
-          </span>
-          <span
-            className="text-xs"
-            style={{ color: 'var(--hero-card-muted)' }}
-          >
-            {s.getSub(props)}
-          </span>
+          <div className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-[color:var(--hero-text)]">
+            {stat.getValue(props)}
+          </div>
+          <p className="mt-2 text-sm text-[color:var(--hero-muted)]">
+            {stat.getSub(props)}
+          </p>
         </div>
       ))}
     </div>

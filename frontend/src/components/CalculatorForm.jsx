@@ -6,7 +6,41 @@ const MAX_SELECTIONS = 5
 const ETF_TICKERS = new Set(['SPY', 'QQQ', 'VTI', 'SCHD', 'ARKK'])
 
 const RISK_LABELS = { low: 'Conservative', mid: 'Moderate', high: 'Aggressive' }
-const getRiskLabel = (val) => val <= 3 ? RISK_LABELS.low : val <= 6 ? RISK_LABELS.mid : RISK_LABELS.high
+const getRiskLabel = (value) => (value <= 3 ? RISK_LABELS.low : value <= 6 ? RISK_LABELS.mid : RISK_LABELS.high)
+
+function SectionHeading({ eyebrow, title, description, aside }) {
+  return (
+    <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+      <div className="max-w-[54ch]">
+        <p className="northline-eyebrow mb-2">{eyebrow}</p>
+        <h3 className="text-xl font-semibold tracking-[-0.02em] text-[color:var(--text-primary)]">
+          {title}
+        </h3>
+        <p className="mt-2 text-sm leading-6 text-[color:var(--text-secondary)]">
+          {description}
+        </p>
+      </div>
+      {aside && (
+        <span className="northline-chip self-start">
+          {aside}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function InputField({ label, optional, error, children }) {
+  return (
+    <label className="grid gap-2">
+      <span className="text-sm font-semibold text-[color:var(--text-primary)]">
+        {label}
+        {optional && <span className="ml-1 font-normal text-[color:var(--text-muted)]">(optional)</span>}
+      </span>
+      {children}
+      {error && <span className="text-sm text-[color:var(--error)]">{error}</span>}
+    </label>
+  )
+}
 
 const CalculatorForm = ({
   funds,
@@ -23,7 +57,7 @@ const CalculatorForm = ({
   onMonthlyChange,
   riskTolerance,
   onRiskToleranceChange,
-  customTickers,
+  customTickers = [],
   onAddCustomTicker,
   onRemoveCustomTicker,
 }) => {
@@ -33,12 +67,9 @@ const CalculatorForm = ({
   const [customInput, setCustomInput] = useState('')
   const [duplicateWarning, setDuplicateWarning] = useState('')
 
-  const mutualFunds = funds.filter(f => !ETF_TICKERS.has(f.ticker))
-  const etfs = funds.filter(f => ETF_TICKERS.has(f.ticker))
+  const mutualFunds = funds.filter((fund) => !ETF_TICKERS.has(fund.ticker))
+  const etfs = funds.filter((fund) => ETF_TICKERS.has(fund.ticker))
   const visibleFunds = fundTab === 'mf' ? mutualFunds : etfs
-
-  const mfSelected = form.tickers.filter(t => !ETF_TICKERS.has(t)).length
-  const etfSelected = form.tickers.filter(t => ETF_TICKERS.has(t)).length
 
   const tryAddCustom = (ticker) => {
     if (!ticker || ticker.length < 1 || ticker.length > 5 || atMax) return
@@ -54,58 +85,63 @@ const CalculatorForm = ({
   }
 
   return (
-    <form className="grid gap-[0.8rem]" onSubmit={onSubmit} noValidate>
-      <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-        <label>Select Mutual Funds <span className="text-[0.72rem] font-normal text-[var(--text-muted)]">({form.tickers.length}/{MAX_SELECTIONS})</span></label>
-        <p className="m-0 text-[0.76rem] leading-5 text-[var(--text-muted)]">
-          This tool is built to compare performance between mutual funds. Add a benchmark ETF only if you want an extra reference in the same scenario.
-        </p>
+    <form className="grid gap-8" onSubmit={onSubmit} noValidate>
+      <section className="northline-card rounded-[28px] p-5 sm:p-6">
+        <SectionHeading
+          eyebrow="Choose funds"
+          title="Pick the funds you want to compare."
+          description="Northline keeps every fund on the same starting balance, monthly contribution, and timeline so the comparison stays fair."
+          aside={`${form.tickers.length}/${MAX_SELECTIONS} selected`}
+        />
 
-        <div className="mb-[0.4rem]">
-          <div className="inline-flex gap-1">
-            <button
-              type="button"
-              className={`border-none bg-transparent px-[0.85rem] py-[0.4rem] text-[0.78rem] font-semibold cursor-pointer rounded-[6px] whitespace-nowrap transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                fundTab === 'mf'
-                  ? 'bg-[rgba(181,152,90,0.15)] text-[var(--accent)]'
-                  : 'text-[var(--text-muted)] hover:bg-[rgba(181,152,90,0.06)] hover:text-[var(--text-secondary)]'
-              }`}
-              onClick={() => setFundTab('mf')}
-            >
-              Mutual Funds ({mutualFunds.length}){mfSelected > 0 && <span className="font-medium opacity-80"> &middot; {mfSelected} selected</span>}
-            </button>
-            <button
-              type="button"
-              className={`border-none bg-transparent px-[0.85rem] py-[0.4rem] text-[0.78rem] font-semibold cursor-pointer rounded-[6px] whitespace-nowrap transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-                fundTab === 'etfs'
-                  ? 'bg-[rgba(181,152,90,0.15)] text-[var(--accent)]'
-                  : 'text-[var(--text-muted)] hover:bg-[rgba(181,152,90,0.06)] hover:text-[var(--text-secondary)]'
-              }`}
-              onClick={() => setFundTab('etfs')}
-            >
-              Benchmarks & ETFs ({etfs.length}){etfSelected > 0 && <span className="font-medium opacity-80"> &middot; {etfSelected} selected</span>}
-            </button>
-          </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={`northline-tab ${fundTab === 'mf' ? 'is-active' : ''}`}
+            onClick={() => setFundTab('mf')}
+          >
+            Mutual funds
+          </button>
+          <button
+            type="button"
+            className={`northline-tab ${fundTab === 'etfs' ? 'is-active' : ''}`}
+            onClick={() => setFundTab('etfs')}
+          >
+            Benchmarks & ETFs
+          </button>
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
+        <p className="mt-4 text-sm leading-6 text-[color:var(--text-secondary)]">
+          Mutual funds are the primary planning path. Add a benchmark ETF only if you want a market reference alongside the funds you are seriously considering.
+        </p>
+
+        {atMax && (
+          <div className="mt-4 rounded-2xl border border-[color:var(--line)] bg-[color:var(--surface-muted)] px-4 py-3 text-sm text-[color:var(--text-secondary)]">
+            You have reached the comparison limit. Remove one selection to add another fund.
+          </div>
+        )}
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {visibleFunds.length === 0 && funds.length === 0 && (
-            <p className="m-0 text-[var(--text-muted)] text-[0.82rem] p-3 col-span-full">
-              {isLoadingFunds ? 'Loading funds\u2026' : 'No funds available'}
-            </p>
+            <div className="northline-empty-state md:col-span-2 xl:col-span-3">
+              {isLoadingFunds ? 'Loading funds…' : 'No funds available'}
+            </div>
           )}
+
           {visibleFunds.map((fund) => {
             const checked = form.tickers.includes(fund.ticker)
-            const colorIndex = checked ? form.tickers.indexOf(fund.ticker) : -1
+            const colorIndex = checked ? form.tickers.indexOf(fund.ticker) : 0
+
             return (
               <label
                 key={fund.ticker}
-                className={`relative flex flex-col gap-[0.2rem] p-[0.7rem] rounded-[10px] border-2 cursor-pointer transition-all duration-200 ${
+                className={[
+                  'group relative flex min-h-[172px] cursor-pointer flex-col rounded-[24px] border p-4 transition duration-200',
                   checked
-                    ? 'border-[var(--accent)] shadow-[0_4px_16px_rgba(181,152,90,0.2)]'
-                    : 'border-[var(--card-border)] hover:border-[var(--accent-light)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,36,77,0.1)]'
-                }${!checked && atMax ? ' opacity-40 cursor-not-allowed pointer-events-none' : ''}`}
-                style={{ background: 'var(--card-bg)' }}
+                    ? 'border-[color:var(--signal)] bg-[color:var(--surface-strong)] shadow-[var(--shadow-soft)]'
+                    : 'border-[color:var(--line)] bg-[color:var(--surface)] hover:-translate-y-0.5 hover:border-[color:var(--line-strong)]',
+                  !checked && atMax ? 'pointer-events-none opacity-45' : '',
+                ].join(' ')}
               >
                 <input
                   type="checkbox"
@@ -114,137 +150,195 @@ const CalculatorForm = ({
                   disabled={isLoadingFunds || isCalculating || (!checked && atMax)}
                   className="sr-only"
                 />
-                <span
-                  className={`absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center text-[0.6rem] font-bold transition-all duration-200 ${
-                    checked
-                      ? 'bg-[var(--accent)] border-[var(--accent)] text-[var(--navy-dark)]'
-                      : 'border-[var(--card-border)] text-[var(--navy-dark)]'
-                  }`}
-                  aria-hidden="true"
-                >
-                  {checked ? '\u2713' : ''}
-                </span>
-                <span
-                  className="w-2 h-2 rounded-full mb-[0.2rem]"
-                  style={{ backgroundColor: checked ? getFundColor(colorIndex) : 'var(--input-border, #D1D5DB)' }}
-                />
-                <span className="text-base font-bold text-[var(--text-primary)]">{fund.ticker}</span>
-                <span className="text-[0.72rem] text-[var(--text-secondary)] whitespace-nowrap overflow-hidden text-ellipsis">{fund.name}</span>
-                <span className="text-[0.82rem] font-semibold text-[var(--success)] mt-[0.15rem]">{formatPercent(fund.expectedAnnualReturn)}</span>
+
+                <div className="flex items-start justify-between gap-3">
+                  <span
+                    className="mt-1 h-3 w-3 rounded-full"
+                    style={{ backgroundColor: getFundColor(colorIndex) }}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-[0.72rem] font-semibold ${
+                      checked
+                        ? 'border-[color:var(--signal)] bg-[color:var(--surface-muted)] text-[color:var(--signal)]'
+                        : 'border-[color:var(--line)] text-[color:var(--text-muted)]'
+                    }`}
+                  >
+                    {checked ? 'Selected' : formatPercent(fund.expectedAnnualReturn)}
+                  </span>
+                </div>
+
+                <div className="mt-5">
+                  <span className="block text-lg font-semibold tracking-[-0.02em] text-[color:var(--text-primary)]">
+                    {fund.ticker}
+                  </span>
+                  <span className="mt-2 block text-sm leading-6 text-[color:var(--text-secondary)]">
+                    {fund.name}
+                  </span>
+                </div>
+
+                <div className="mt-auto pt-5 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
+                  {fundTab === 'mf' ? 'Mutual fund' : 'Benchmark / ETF'}
+                </div>
               </label>
             )
           })}
         </div>
 
-        {/* Custom ticker chips */}
-        {customTickers && customTickers.length > 0 && (
-          <div className="flex flex-wrap gap-[0.35rem]">
-            {customTickers.map((t) => (
-              <span key={t} className="inline-flex items-center gap-[0.3rem] bg-[rgba(181,152,90,0.12)] text-[var(--accent)] text-[0.75rem] font-semibold px-2 py-1 rounded-[5px]">
-                {t}
+        {customTickers.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {customTickers.map((ticker) => (
+              <span key={ticker} className="inline-flex items-center gap-2 rounded-full border border-[color:var(--line)] bg-[color:var(--surface-strong)] px-3 py-1.5 text-sm font-semibold text-[color:var(--text-primary)]">
+                {ticker}
                 <button
                   type="button"
-                  className="border-none bg-transparent text-[var(--text-muted)] text-[0.85rem] cursor-pointer p-0 leading-none transition-colors duration-150 hover:text-[var(--error)]"
-                  onClick={() => onRemoveCustomTicker(t)}
-                  aria-label={`Remove ${t}`}
-                >&times;</button>
+                  className="border-none bg-transparent p-0 text-[color:var(--text-muted)] transition hover:text-[color:var(--error)]"
+                  onClick={() => onRemoveCustomTicker(ticker)}
+                  aria-label={`Remove ${ticker}`}
+                >
+                  ×
+                </button>
               </span>
             ))}
           </div>
         )}
 
-        {/* Custom ticker search — expandable */}
         {!showCustom ? (
           <button
             type="button"
-            className="border-none bg-transparent text-[var(--text-muted)] text-[0.75rem] font-medium cursor-pointer py-[0.3rem] px-0 transition-colors duration-200 hover:text-[var(--accent)]"
+            className="mt-4 inline-flex items-center gap-2 border-none bg-transparent p-0 text-sm font-semibold text-[color:var(--signal)] transition hover:opacity-80"
             onClick={() => setShowCustom(true)}
           >
-            + Add a custom comparison ticker
+            <span className="text-lg leading-none">+</span>
+            Add a custom ticker
           </button>
         ) : (
-          <div className="flex gap-2 items-center">
-            <input
-              type="text"
-              className="flex-1 border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text-primary)] rounded-[6px] px-[0.6rem] py-[0.35rem] text-[0.78rem] font-[inherit] outline-none transition-colors duration-200 focus:border-[var(--accent)]"
-              value={customInput}
-              onChange={(e) => setCustomInput(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault()
-                  tryAddCustom(customInput)
-                }
-                if (e.key === 'Escape') {
-                  setShowCustom(false)
-                  setCustomInput('')
-                  setDuplicateWarning('')
-                }
-              }}
-              placeholder="e.g. SWPPX, VWELX, VTSAX"
-              disabled={isCalculating || atMax}
-              autoFocus
-            />
-            <button
-              type="button"
-              className="border-none bg-[var(--accent)] text-[#00244D] text-[0.75rem] font-semibold px-3 py-[0.35rem] rounded-[6px] cursor-pointer transition-opacity duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
-              disabled={customInput.length < 1 || customInput.length > 5 || atMax}
-              onClick={() => tryAddCustom(customInput)}
-            >
-              Add
-            </button>
+          <div className="mt-4 rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <input
+                type="text"
+                className="northline-input flex-1"
+                value={customInput}
+                onChange={(event) => setCustomInput(event.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    tryAddCustom(customInput)
+                  }
+                  if (event.key === 'Escape') {
+                    setShowCustom(false)
+                    setCustomInput('')
+                    setDuplicateWarning('')
+                  }
+                }}
+                placeholder="Ticker symbol, for example VTSAX"
+                disabled={isCalculating || atMax}
+                autoFocus
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  className="northline-button-primary"
+                  disabled={customInput.length < 1 || customInput.length > 5 || atMax}
+                  onClick={() => tryAddCustom(customInput)}
+                >
+                  Add ticker
+                </button>
+                <button
+                  type="button"
+                  className="northline-button-secondary"
+                  onClick={() => {
+                    setShowCustom(false)
+                    setCustomInput('')
+                    setDuplicateWarning('')
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+            {duplicateWarning && <p className="mt-3 text-sm text-[color:var(--warning)]">{duplicateWarning}</p>}
           </div>
         )}
 
-        {duplicateWarning && <p className="text-[0.72rem] font-normal text-[var(--accent)]! animate-[fadeIn_0.2s_ease-out]">{duplicateWarning}</p>}
-        {errors.tickers && <p className="m-0 text-[var(--error)] text-[0.775rem]">{errors.tickers}</p>}
-      </div>
+        {errors.tickers && <p className="mt-4 text-sm text-[color:var(--error)]">{errors.tickers}</p>}
+      </section>
 
-      <div className="grid grid-cols-2 gap-[0.8rem] max-md:grid-cols-1">
-        <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <label htmlFor="investment">Initial Investment ($)</label>
-          <input
-            id="investment"
-            name="investment"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="0.01"
-            value={form.investment}
-            onChange={onChange}
-            placeholder="e.g. 10000"
-            disabled={isCalculating}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text-primary)] px-3 py-[0.65rem] text-sm transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:shadow-[var(--input-focus-shadow)] disabled:opacity-50"
-          />
-          {errors.investment && <p className="m-0 text-[var(--error)] text-[0.775rem]">{errors.investment}</p>}
+      <section className="northline-card rounded-[28px] p-5 sm:p-6">
+        <SectionHeading
+          eyebrow="Set your money plan"
+          title="Capture the dollars you expect to commit."
+          description="Use your current starting balance, any monthly contribution, and an optional target so the model reflects the plan you are actually considering."
+        />
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-3">
+          <InputField label="Initial investment" error={errors.investment}>
+            <input
+              id="investment"
+              name="investment"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              value={form.investment}
+              onChange={onChange}
+              placeholder="10000"
+              disabled={isCalculating}
+              className="northline-input"
+            />
+          </InputField>
+
+          <InputField label="Monthly contribution" optional>
+            <input
+              id="monthlyContribution"
+              name="monthlyContribution"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="50"
+              value={monthlyContribution}
+              onChange={onMonthlyChange}
+              placeholder="500"
+              disabled={isCalculating}
+              className="northline-input"
+            />
+          </InputField>
+
+          <InputField label="Goal amount" optional>
+            <input
+              id="goalAmount"
+              name="goalAmount"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="1000"
+              value={goalAmount}
+              onChange={onGoalChange}
+              placeholder="50000"
+              disabled={isCalculating}
+              className="northline-input"
+            />
+          </InputField>
         </div>
+      </section>
 
-        <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <label htmlFor="monthlyContribution">Monthly Contribution ($) <span className="text-[0.72rem] font-normal text-[var(--text-muted)]">(optional)</span></label>
-          <input
-            id="monthlyContribution"
-            name="monthlyContribution"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="50"
-            value={monthlyContribution}
-            onChange={onMonthlyChange}
-            placeholder="e.g. 500"
-            disabled={isCalculating}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text-primary)] px-3 py-[0.65rem] text-sm transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:shadow-[var(--input-focus-shadow)] disabled:opacity-50"
-          />
-        </div>
-      </div>
+      <section className="northline-card rounded-[28px] p-5 sm:p-6">
+        <SectionHeading
+          eyebrow="Set time horizon and risk"
+          title="Match the plan to your patience and comfort level."
+          description="A longer timeline and a higher comfort with volatility can produce very different outcomes. Move both sliders until the scenario feels realistic."
+        />
 
-      <div className="grid grid-cols-2 gap-[0.8rem] max-md:grid-cols-1">
-        <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <label htmlFor="years">Investment Duration</label>
-            <span className="text-[0.85rem] font-semibold text-[var(--text-primary)] whitespace-nowrap rounded-full border border-[var(--card-border)] bg-[var(--bg)] px-2.5 py-1">
-              {form.years || 10} years
-            </span>
-          </div>
-          <div className="min-w-0">
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <div className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="years" className="text-sm font-semibold text-[color:var(--text-primary)]">
+                Investment duration
+              </label>
+              <span className="northline-chip">
+                {form.years || 10} years
+              </span>
+            </div>
             <input
               id="years"
               name="years"
@@ -255,69 +349,61 @@ const CalculatorForm = ({
               value={form.years || 10}
               onChange={onChange}
               disabled={isCalculating}
-              className="w-full min-w-0 appearance-none h-[6px] rounded-[3px] bg-[var(--input-border)] outline-none !border-none !p-0 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00244D] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-[#B5985A] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 [&::-webkit-slider-thumb:hover]:scale-[1.15] [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#00244D] [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-[#B5985A] [&::-moz-range-thumb]:cursor-pointer"
+              className="northline-range mt-5"
             />
+            <div className="mt-3 flex justify-between text-xs text-[color:var(--text-muted)]">
+              <span>1 year</span>
+              <span>50 years</span>
+            </div>
+            {errors.years && <p className="mt-3 text-sm text-[color:var(--error)]">{errors.years}</p>}
           </div>
-          {errors.years && <p className="m-0 text-[var(--error)] text-[0.775rem]">{errors.years}</p>}
-        </div>
 
-        <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <label htmlFor="goalAmount">Goal Amount ($) <span className="text-[0.72rem] font-normal text-[var(--text-muted)]">(optional)</span></label>
-          <input
-            id="goalAmount"
-            name="goalAmount"
-            type="number"
-            inputMode="decimal"
-            min="0"
-            step="1000"
-            value={goalAmount}
-            onChange={onGoalChange}
-            placeholder="e.g. 50000"
-            disabled={isCalculating}
-            className="w-full rounded-lg border border-[var(--input-border)] bg-[var(--input-bg)] text-[var(--text-primary)] px-3 py-[0.65rem] text-sm transition-all duration-200 focus:outline-none focus:border-[var(--accent)] focus:shadow-[var(--input-focus-shadow)] disabled:opacity-50"
-          />
-        </div>
-
-        <div className="grid gap-[0.4rem] [&>label]:text-[0.82rem] [&>label]:font-semibold [&>label]:text-[var(--text-secondary)] [&>label]:tracking-[0.01em]">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <label htmlFor="riskTolerance">Risk Tolerance</label>
-            <span className="text-[0.85rem] font-semibold text-[var(--text-primary)] whitespace-nowrap rounded-full border border-[var(--card-border)] bg-[var(--bg)] px-2.5 py-1">
-              {riskTolerance}/10 &middot; {getRiskLabel(riskTolerance)}
-            </span>
+          <div className="rounded-[22px] border border-[color:var(--line)] bg-[color:var(--surface-muted)] p-4">
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="riskTolerance" className="text-sm font-semibold text-[color:var(--text-primary)]">
+                Risk comfort
+              </label>
+              <span className="northline-chip">
+                {riskTolerance}/10 · {getRiskLabel(riskTolerance)}
+              </span>
+            </div>
+            <input
+              id="riskTolerance"
+              name="riskTolerance"
+              type="range"
+              min="1"
+              max="10"
+              step="1"
+              value={riskTolerance}
+              onChange={onRiskToleranceChange}
+              disabled={isCalculating}
+              className="northline-range mt-5"
+            />
+            <div className="mt-3 flex justify-between text-xs text-[color:var(--text-muted)]">
+              <span>Steadier</span>
+              <span>Growth-seeking</span>
+            </div>
           </div>
-        <div className="min-w-0">
-          <input
-            id="riskTolerance"
-            name="riskTolerance"
-            type="range"
-            min="1"
-            max="10"
-            step="1"
-            value={riskTolerance}
-            onChange={onRiskToleranceChange}
-            disabled={isCalculating}
-            className="w-full min-w-0 appearance-none h-[6px] rounded-[3px] bg-[var(--input-border)] outline-none !border-none !p-0 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00244D] [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-solid [&::-webkit-slider-thumb]:border-[#B5985A] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:duration-150 [&::-webkit-slider-thumb:hover]:scale-[1.15] [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#00244D] [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-solid [&::-moz-range-thumb]:border-[#B5985A] [&::-moz-range-thumb]:cursor-pointer"
-          />
         </div>
-      </div>
-      </div>
+      </section>
 
-      <button
-        type="submit"
-        className="mt-2 border-none rounded-[10px] bg-[#00244D] text-white px-5 py-[0.8rem] font-semibold text-[0.95rem] flex items-center justify-center gap-2 transition-all duration-250 w-full hover:enabled:bg-[#B5985A] hover:enabled:text-[#00244D] hover:enabled:-translate-y-px hover:enabled:shadow-[0_4px_16px_rgba(181,152,90,0.3)] disabled:opacity-40 disabled:cursor-not-allowed [&>svg]:w-4 [&>svg]:h-4 [&>svg]:stroke-current"
-        disabled={isCalculating || isLoadingFunds || funds.length === 0}
-      >
-        {isCalculating ? (
-          'Comparing\u2026'
-        ) : (
-          <>
-            <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-            Compare Fund Performance
-          </>
-        )}
-      </button>
+      <section className="northline-card rounded-[28px] p-5 sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="max-w-[48ch]">
+            <p className="northline-eyebrow mb-2">Methodology note</p>
+            <p className="text-sm leading-6 text-[color:var(--text-secondary)]">
+              Northline uses CAPM-based expected returns, live fund data, and the exact same assumptions across each fund so the comparison stays apples-to-apples.
+            </p>
+          </div>
+          <button
+            type="submit"
+            className="northline-button-primary justify-center"
+            disabled={isCalculating || isLoadingFunds || funds.length === 0}
+          >
+            {isCalculating ? 'Building comparison…' : 'Build comparison'}
+          </button>
+        </div>
+      </section>
     </form>
   )
 }

@@ -3,76 +3,86 @@ import { getFundColor } from '../utils/colors'
 import { isRiskMatch, isTooConservative } from '../utils/riskMatch'
 
 const verdictStyles = {
-  best:    'bg-[rgba(181,152,90,0.15)] text-[var(--accent)]',
-  growth:  'bg-[rgba(5,150,105,0.1)] text-[var(--success)]',
-  safe:    'bg-[rgba(46,107,158,0.1)] text-[#4A90C4]',
-  caution: 'bg-[rgba(232,112,64,0.1)] text-[#E87040]',
-  neutral: 'bg-[rgba(136,150,166,0.1)] text-[var(--text-muted)]',
+  best: 'bg-[color:var(--signal)]/12 text-[color:var(--signal)]',
+  growth: 'bg-[color:var(--success)]/12 text-[color:var(--success)]',
+  safe: 'bg-[color:var(--navy)]/10 text-[color:var(--navy)]',
+  caution: 'bg-[color:var(--warning)]/12 text-[color:var(--warning)]',
+  neutral: 'bg-[color:var(--surface-muted)] text-[color:var(--text-muted)]',
 }
 
 const VerdictTag = ({ variant, children }) => (
-  <span className={`inline-block text-[0.65rem] font-semibold px-1.5 py-[0.15rem] rounded uppercase tracking-[0.03em] ${verdictStyles[variant]}`}>
+  <span className={`inline-flex rounded-full px-2.5 py-1 text-[0.72rem] font-semibold ${verdictStyles[variant]}`}>
     {children}
   </span>
 )
 
+const tableHeadClass = 'px-3 py-3 text-left text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-[color:var(--text-muted)]'
+const tableCellClass = 'px-3 py-4 text-sm text-[color:var(--text-primary)]'
+
 const ComparisonTable = ({ results, riskTolerance }) => {
   const tickers = Object.keys(results)
 
-  const bestFV = tickers.reduce((best, t) => results[t].futureValue > results[best].futureValue ? t : best, tickers[0])
-  const lowestBeta = tickers.reduce((best, t) => results[t].beta < results[best].beta ? t : best, tickers[0])
-
-  const th = 'px-2 py-2 text-left text-[var(--text-muted)] font-semibold text-[0.65rem] uppercase tracking-[0.04em]'
-  const thR = `${th} text-right`
-  const td = 'px-2 py-2.5 text-left text-[var(--text-primary)] text-[0.8rem]'
-  const tdR = `${td} text-right`
-  const bestCell = '!text-[var(--accent)] font-semibold'
+  const bestFutureValueTicker = tickers.reduce((best, ticker) => (
+    results[ticker].futureValue > results[best].futureValue ? ticker : best
+  ), tickers[0])
+  const lowestBetaTicker = tickers.reduce((best, ticker) => (
+    results[ticker].beta < results[best].beta ? ticker : best
+  ), tickers[0])
 
   return (
-    <div className="w-full overflow-x-auto pb-1" data-testid="comparison-table-scroll">
-      <table className="w-full min-w-[640px] border-collapse text-[0.8rem]" style={{ fontVariantNumeric: 'tabular-nums' }}>
+    <div className="northline-table-scroll overflow-x-auto" data-testid="comparison-table-scroll">
+      <table className="min-w-[720px] w-full border-separate border-spacing-0" style={{ fontVariantNumeric: 'tabular-nums' }}>
         <thead>
-          <tr style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <th className={th}>Fund</th>
-            <th className={thR}>Beta</th>
-            <th className={thR}>CAPM</th>
-            <th className={thR}>Mkt Ret</th>
-            <th className={thR}>Future Value</th>
-            <th className={th}></th>
+          <tr>
+            <th className={tableHeadClass}>Fund</th>
+            <th className={`${tableHeadClass} text-right`}>Beta</th>
+            <th className={`${tableHeadClass} text-right`}>CAPM</th>
+            <th className={`${tableHeadClass} text-right`}>Market return</th>
+            <th className={`${tableHeadClass} text-right`}>Projected value</th>
+            <th className={tableHeadClass}>Assessment</th>
           </tr>
         </thead>
         <tbody>
-          {tickers.map((ticker, i) => {
-            const r = results[ticker]
-            const isBestGrowth = ticker === bestFV
-            const isSafest = ticker === lowestBeta
-            const riskOk = riskTolerance == null || isRiskMatch(r.beta, riskTolerance)
-            const tooSafe = riskTolerance != null && isTooConservative(r.beta, riskTolerance)
+          {tickers.map((ticker, index) => {
+            const result = results[ticker]
+            const isLeader = ticker === bestFutureValueTicker
+            const isSafest = ticker === lowestBetaTicker
+            const riskMatch = riskTolerance == null || isRiskMatch(result.beta, riskTolerance)
+            const tooConservative = riskTolerance != null && isTooConservative(result.beta, riskTolerance)
+
             return (
-              <tr
-                key={ticker}
-                className="transition-colors duration-150 hover:bg-[rgba(181,152,90,0.04)]"
-                style={{ borderBottom: '1px solid var(--card-border)' }}
-              >
-                <td className={td}>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: getFundColor(i) }} />
+              <tr key={ticker} className="rounded-2xl">
+                <td className={`${tableCellClass} border-t border-[color:var(--line)]`}>
+                  <span className="flex items-center gap-3">
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: getFundColor(index) }} aria-hidden="true" />
                     <span>
-                      <span className="block font-bold text-[0.8rem]">{ticker}</span>
-                      <span className="block max-w-[160px] truncate text-[0.65rem] text-[var(--text-muted)]">{r.fundName}</span>
+                      <span className="block font-semibold text-[color:var(--text-primary)]">{ticker}</span>
+                      <span className="block text-xs text-[color:var(--text-muted)]">{result.fundName}</span>
                     </span>
                   </span>
                 </td>
-                <td className={`${tdR} ${isSafest ? bestCell : ''}`}>{formatDecimal(r.beta, 2)}</td>
-                <td className={tdR}>{formatPercent(r.capmReturn)}</td>
-                <td className={tdR}>{formatPercent(r.expectedMarketReturn)}</td>
-                <td className={`${tdR} ${isBestGrowth ? bestCell : ''} font-semibold`}>{formatCurrency(r.futureValue)}</td>
-                <td className={td}>
-                  {isBestGrowth && isSafest && <VerdictTag variant="best">Best Overall</VerdictTag>}
-                  {isBestGrowth && !isSafest && <VerdictTag variant="growth">Best Growth</VerdictTag>}
-                  {isSafest && !isBestGrowth && <VerdictTag variant="safe">Safest</VerdictTag>}
-                  {!riskOk && <VerdictTag variant="caution">High Risk</VerdictTag>}
-                  {tooSafe && <VerdictTag variant="neutral">Conservative</VerdictTag>}
+                <td className={`${tableCellClass} border-t border-[color:var(--line)] text-right ${isSafest ? 'font-semibold text-[color:var(--signal)]' : ''}`}>
+                  {formatDecimal(result.beta, 2)}
+                </td>
+                <td className={`${tableCellClass} border-t border-[color:var(--line)] text-right`}>
+                  {formatPercent(result.capmReturn)}
+                </td>
+                <td className={`${tableCellClass} border-t border-[color:var(--line)] text-right`}>
+                  {formatPercent(result.expectedMarketReturn)}
+                </td>
+                <td className={`${tableCellClass} border-t border-[color:var(--line)] text-right ${isLeader ? 'font-semibold text-[color:var(--signal)]' : ''}`}>
+                  {formatCurrency(result.futureValue)}
+                </td>
+                <td className={`${tableCellClass} border-t border-[color:var(--line)]`}>
+                  <div className="flex flex-wrap gap-2">
+                    {isLeader && <VerdictTag variant="growth">Top projection</VerdictTag>}
+                    {isSafest && <VerdictTag variant="safe">Lowest beta</VerdictTag>}
+                    {!riskMatch && <VerdictTag variant="caution">Risk above target</VerdictTag>}
+                    {tooConservative && <VerdictTag variant="neutral">More cautious</VerdictTag>}
+                    {!isLeader && !isSafest && riskMatch && !tooConservative && (
+                      <VerdictTag variant="best">Balanced fit</VerdictTag>
+                    )}
+                  </div>
                 </td>
               </tr>
             )
