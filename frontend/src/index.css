@@ -338,48 +338,6 @@ button {
   color: var(--text-secondary);
 }
 
-.northline-scroll-section {
-  display: grid;
-}
-
-.northline-scroll-sentinel {
-  display: grid;
-  place-items: center;
-  padding-block: 0.5rem;
-  transition: opacity 0.22s ease, transform 0.22s ease;
-}
-
-.northline-scroll-sentinel.is-active {
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.northline-scroll-sentinel-line {
-  display: block;
-  width: min(100%, 8rem);
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--line-strong), transparent);
-}
-
-.northline-scroll-content {
-  overflow: clip;
-  transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease, transform 0.22s ease;
-  will-change: max-height, opacity, transform;
-}
-
-.northline-scroll-content.is-visible {
-  max-height: 2200px;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.northline-scroll-content.is-hidden {
-  max-height: 0;
-  opacity: 0;
-  transform: translateY(10px);
-  pointer-events: none;
-}
-
 .northline-table-scroll {
   border-radius: 24px;
   border: 1px solid var(--line);

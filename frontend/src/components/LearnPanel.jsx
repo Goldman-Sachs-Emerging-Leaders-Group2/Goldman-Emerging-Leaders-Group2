@@ -1,4 +1,14 @@
 import { useMemo, useState } from 'react'
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { formatCurrency } from '../utils/formatters'
 
 const PLANNING_PRINCIPLES = [
   {
@@ -30,28 +40,63 @@ const GUIDANCE_NOTES = [
   'Revisit assumptions when your income, savings capacity, or goal changes. The most trustworthy projection is the one that still matches your life.',
 ]
 
+const clampNonNegative = (value) => Math.max(0, Number.isFinite(value) ? value : 0)
+
+const formatYAxisTick = (value) => {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(0)}K`
+  return `$${Math.round(value)}`
+}
+
+const LearnChartTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null
+
+  const totalValue = payload.find((entry) => entry.dataKey === 'total')?.value ?? 0
+  const contributedValue = payload.find((entry) => entry.dataKey === 'contributions')?.value ?? 0
+
+  return (
+    <div className="rounded-[20px] border border-[color:var(--line)] bg-[color:var(--surface-strong)] p-4 text-sm shadow-[var(--shadow-soft)]">
+      <p className="font-semibold text-[color:var(--text-primary)]">Year {label}</p>
+      <div className="mt-2 grid gap-2">
+        <p className="text-xs font-medium text-[color:var(--signal)]">
+          Projected total: {formatCurrency(totalValue)}
+        </p>
+        <p className="text-xs font-medium text-[color:var(--text-secondary)]">
+          Total contributed: {formatCurrency(contributedValue)}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function LearnPanel({ onStartPlan }) {
   const [principal, setPrincipal] = useState(1000)
   const [contribution, setContribution] = useState(100)
   const [years, setYears] = useState(10)
   const [rate, setRate] = useState(8)
 
-  const compoundData = useMemo(() => {
-    let total = principal
-    let totalContributions = principal
-    const yearlyData = [{ year: 0, total: Math.round(total), contributions: totalContributions }]
+  const safePrincipal = clampNonNegative(principal)
+  const safeContribution = clampNonNegative(contribution)
+  const safeYears = Math.max(1, Math.min(40, Math.round(years) || 1))
+  const safeRate = Math.max(0, Math.min(15, rate || 0))
 
-    for (let index = 1; index <= years; index += 1) {
-      const annualContribution = contribution * 12
+  const compoundData = useMemo(() => {
+    let total = safePrincipal
+    let totalContributions = safePrincipal
+    const yearlyData = [{ year: 0, total: Math.round(total), contributions: Math.round(totalContributions) }]
+
+    for (let index = 1; index <= safeYears; index += 1) {
+      const annualContribution = safeContribution * 12
       totalContributions += annualContribution
-      total = (total + annualContribution) * (1 + rate / 100)
-      yearlyData.push({ year: index, total: Math.round(total), contributions: totalContributions })
+      total = (total + annualContribution) * (1 + safeRate / 100)
+      yearlyData.push({ year: index, total: Math.round(total), contributions: Math.round(totalContributions) })
     }
 
     return yearlyData
-  }, [principal, contribution, years, rate])
+  }, [safeContribution, safePrincipal, safeRate, safeYears])
 
   const endingValue = compoundData[compoundData.length - 1].total
+  const endingContributions = compoundData[compoundData.length - 1].contributions
 
   return (
     <section className="grid gap-8 py-10">
@@ -107,21 +152,21 @@ export default function LearnPanel({ onStartPlan }) {
             <div className="mt-6 grid gap-4">
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-[color:var(--text-primary)]">Starting amount</span>
-                <input type="number" value={principal} onChange={(event) => setPrincipal(Number(event.target.value))} className="northline-input" />
+                <input type="number" min="0" step="100" value={principal} onChange={(event) => setPrincipal(Number(event.target.value))} className="northline-input" />
               </label>
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-[color:var(--text-primary)]">Monthly contribution</span>
-                <input type="number" value={contribution} onChange={(event) => setContribution(Number(event.target.value))} className="northline-input" />
+                <input type="number" min="0" step="25" value={contribution} onChange={(event) => setContribution(Number(event.target.value))} className="northline-input" />
               </label>
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-[color:var(--text-primary)]">Years</span>
-                <input type="range" min="1" max="40" value={years} onChange={(event) => setYears(Number(event.target.value))} className="northline-range" />
-                <span className="text-sm text-[color:var(--text-secondary)]">{years} years</span>
+                <input type="range" min="1" max="40" value={safeYears} onChange={(event) => setYears(Number(event.target.value))} className="northline-range" />
+                <span className="text-sm text-[color:var(--text-secondary)]">{safeYears} years</span>
               </label>
               <label className="grid gap-2">
                 <span className="text-sm font-semibold text-[color:var(--text-primary)]">Expected annual return</span>
-                <input type="range" min="1" max="15" step="0.5" value={rate} onChange={(event) => setRate(Number(event.target.value))} className="northline-range" />
-                <span className="text-sm text-[color:var(--text-secondary)]">{rate}%</span>
+                <input type="range" min="0" max="15" step="0.5" value={safeRate} onChange={(event) => setRate(Number(event.target.value))} className="northline-range" />
+                <span className="text-sm text-[color:var(--text-secondary)]">{safeRate}%</span>
               </label>
             </div>
           </div>
@@ -131,35 +176,75 @@ export default function LearnPanel({ onStartPlan }) {
               <div>
                 <p className="northline-eyebrow mb-2">Projected total</p>
                 <div className="text-4xl font-semibold tracking-[-0.04em] text-[color:var(--signal)]">
-                  ${endingValue.toLocaleString()}
+                  {formatCurrency(endingValue)}
                 </div>
               </div>
-              <div className="northline-chip">
-                Educational example
+              <div className="grid gap-1 text-right">
+                <div className="northline-chip justify-center">
+                  Educational example
+                </div>
+                <p className="text-sm font-medium text-[color:var(--text-secondary)]">
+                  Contributed: {formatCurrency(endingContributions)}
+                </p>
               </div>
             </div>
 
-            <div className="mt-8 flex min-h-[220px] items-end gap-2 border-t border-[color:var(--line)] pt-6">
-              {compoundData.filter((_, index) => index % Math.max(Math.ceil(years / 16), 1) === 0).map((dataPoint) => {
-                const heightPct = (dataPoint.total / endingValue) * 100
-                return (
-                  <div key={dataPoint.year} className="group flex flex-1 flex-col justify-end">
-                    <div className="mb-2 rounded-xl border border-[color:var(--line)] bg-[color:var(--surface-strong)] px-2 py-1 text-center text-[0.72rem] text-[color:var(--text-secondary)] opacity-0 transition group-hover:opacity-100">
-                      Year {dataPoint.year}: ${dataPoint.total.toLocaleString()}
-                    </div>
-                    <div
-                      className="rounded-t-xl bg-[image:var(--hero-bg)] transition-all duration-300"
-                      style={{ height: `${Math.max(heightPct, 6)}%` }}
-                    />
-                  </div>
-                )
-              })}
+            <div className="mt-8 border-t border-[color:var(--line)] pt-6" aria-label="Compound growth chart">
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={compoundData} margin={{ top: 10, right: 12, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="learn-growth-gradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--signal)" stopOpacity={0.28} />
+                      <stop offset="100%" stopColor="var(--signal)" stopOpacity={0.03} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="4 6" vertical={false} />
+                  <XAxis
+                    dataKey="year"
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickCount={Math.min(safeYears + 1, 6)}
+                  />
+                  <YAxis
+                    tickFormatter={formatYAxisTick}
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={66}
+                  />
+                  <Tooltip
+                    content={<LearnChartTooltip />}
+                    cursor={{ stroke: 'var(--line-strong)', strokeDasharray: '4 6' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="contributions"
+                    stroke="var(--text-muted)"
+                    strokeWidth={1.6}
+                    strokeDasharray="6 4"
+                    fill="none"
+                    dot={false}
+                    isAnimationActive={false}
+                    name="Contributions"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="var(--signal)"
+                    strokeWidth={2.3}
+                    fill="url(#learn-growth-gradient)"
+                    dot={false}
+                    isAnimationActive={false}
+                    name="Projected total"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
 
-            <div className="mt-3 flex justify-between text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
-              <span>Year 0</span>
-              <span>Year {years}</span>
-            </div>
+            <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[color:var(--text-muted)]">
+              Projection window: Year 0 to Year {safeYears}
+            </p>
           </div>
         </div>
       </div>

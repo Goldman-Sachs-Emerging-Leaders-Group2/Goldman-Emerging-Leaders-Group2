@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 
 import CalculatorForm from './components/CalculatorForm'
 import GrowthChart from './components/GrowthChart'
@@ -76,53 +76,6 @@ const estimatePreviewValue = ({ investment, monthlyContribution, years, annualRe
   return total
 }
 
-function DeferredHomeSection({ children, sentinelClassName = '' }) {
-  const triggerRef = useRef(null)
-  const [isVisible, setIsVisible] = useState(
-    () => typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined',
-  )
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.IntersectionObserver === 'undefined') {
-      return undefined
-    }
-
-    const node = triggerRef.current
-    if (!node) return undefined
-
-    const observer = new window.IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting)
-      },
-      {
-        rootMargin: '0px 0px -24% 0px',
-        threshold: 0,
-      },
-    )
-
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
-
-  return (
-    <div className="northline-scroll-section">
-      <div
-        ref={triggerRef}
-        className={`northline-scroll-sentinel ${sentinelClassName} ${isVisible ? 'is-active' : ''}`.trim()}
-        aria-hidden="true"
-      >
-        <span className="northline-scroll-sentinel-line" />
-      </div>
-      <div
-        className={`northline-scroll-content ${isVisible ? 'is-visible' : 'is-hidden'}`}
-        aria-hidden={!isVisible}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
 function App() {
   const { theme, toggleTheme } = useTheme()
   const { activeView, navigateTo, startPlan, showResults, goHome } = useViewState()
@@ -186,6 +139,42 @@ function App() {
     annualReturn: previewRate,
   })
   const previewLabel = calc.hasResults ? 'Latest run' : 'Sample path'
+
+  useEffect(() => {
+    if (activeView !== 'home' || typeof window === 'undefined') {
+      return undefined
+    }
+
+    const selector = '[data-scrollreveal]'
+
+    const applyReveal = () => {
+      const createScrollReveal = window.ScrollReveal
+      if (typeof createScrollReveal !== 'function') return
+
+      const sr = createScrollReveal()
+      sr.clean(selector)
+      sr.reveal(selector, {
+        distance: '0px',
+        duration: 560,
+        easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        opacity: 0,
+        scale: 1,
+        reset: true,
+        viewFactor: 0.8,
+        interval: 110,
+      })
+    }
+
+    applyReveal()
+
+    const script = document.getElementById('scrollreveal-cdn')
+    if (!window.ScrollReveal && script) {
+      script.addEventListener('load', applyReveal, { once: true })
+      return () => script.removeEventListener('load', applyReveal)
+    }
+
+    return undefined
+  }, [activeView])
 
   const alerts = (
     <div className="grid gap-3">
@@ -277,74 +266,70 @@ function App() {
         </div>
       </div>
 
-      <DeferredHomeSection sentinelClassName="min-h-20">
-        <section className="grid gap-4 lg:grid-cols-3">
-          {HOW_IT_WORKS.map((step, index) => (
-            <div key={step.title} className="northline-card rounded-[28px] p-6">
-              <p className="northline-eyebrow mb-3">Step {index + 1}</p>
-              <h2 className="text-[1.4rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
-                {step.title}
+      <section className="grid gap-4 lg:grid-cols-3">
+        {HOW_IT_WORKS.map((step, index) => (
+          <div key={step.title} data-scrollreveal className="northline-card rounded-[28px] p-6">
+            <p className="northline-eyebrow mb-3">Step {index + 1}</p>
+            <h2 className="text-[1.4rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
+              {step.title}
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
+              {step.description}
+            </p>
+          </div>
+        ))}
+      </section>
+
+      <div className="grid gap-10">
+        <section data-scrollreveal className="northline-card-strong rounded-[32px] p-6 sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
+            <div>
+              <p className="northline-eyebrow-inverse mb-3">Methodology</p>
+              <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--hero-text)]">
+                Transparent enough to trust, simple enough to use.
               </h2>
-              <p className="mt-3 text-sm leading-7 text-[color:var(--text-secondary)]">
-                {step.description}
-              </p>
+            </div>
+            <div className="grid gap-3">
+              {METHODOLOGY_POINTS.map((point) => (
+                <div key={point} className="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4 text-sm leading-7 text-[color:var(--hero-muted)]">
+                  {point}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          {VALUE_GRID.map((item) => (
+            <div key={item.title} data-scrollreveal className="northline-card rounded-[28px] p-6">
+              <p className="northline-eyebrow mb-3">{item.title}</p>
+              <p className="text-sm leading-7 text-[color:var(--text-secondary)]">{item.description}</p>
             </div>
           ))}
         </section>
-      </DeferredHomeSection>
 
-      <DeferredHomeSection sentinelClassName="min-h-24">
-        <div className="grid gap-10">
-          <section className="northline-card-strong rounded-[32px] p-6 sm:p-8">
-            <div className="grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
-              <div>
-                <p className="northline-eyebrow-inverse mb-3">Methodology</p>
-                <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--hero-text)]">
-                  Transparent enough to trust, simple enough to use.
-                </h2>
-              </div>
-              <div className="grid gap-3">
-                {METHODOLOGY_POINTS.map((point) => (
-                  <div key={point} className="rounded-[22px] border border-white/10 bg-white/6 px-4 py-4 text-sm leading-7 text-[color:var(--hero-muted)]">
-                    {point}
-                  </div>
-                ))}
-              </div>
+        <section data-scrollreveal className="northline-card rounded-[32px] p-6 sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            <div>
+              <p className="northline-eyebrow mb-3">Learning support</p>
+              <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--text-primary)]">
+                Want context before you commit to a comparison?
+              </h2>
+              <p className="mt-4 max-w-[56ch] text-base leading-8 text-[color:var(--text-secondary)]">
+                The Planning Basics section explains CAPM, compounding, and risk in plain language so you can interpret the comparison with more confidence.
+              </p>
             </div>
-          </section>
-
-          <section className="grid gap-4 lg:grid-cols-3">
-            {VALUE_GRID.map((item) => (
-              <div key={item.title} className="northline-card rounded-[28px] p-6">
-                <p className="northline-eyebrow mb-3">{item.title}</p>
-                <p className="text-sm leading-7 text-[color:var(--text-secondary)]">{item.description}</p>
-              </div>
-            ))}
-          </section>
-
-          <section className="northline-card rounded-[32px] p-6 sm:p-8">
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-              <div>
-                <p className="northline-eyebrow mb-3">Learning support</p>
-                <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-[color:var(--text-primary)]">
-                  Want context before you commit to a comparison?
-                </h2>
-                <p className="mt-4 max-w-[56ch] text-base leading-8 text-[color:var(--text-secondary)]">
-                  The Planning Basics section explains CAPM, compounding, and risk in plain language so you can interpret the comparison with more confidence.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3 lg:justify-end">
-                <button type="button" className="northline-button-primary" onClick={() => handleNavigate('learn')}>
-                  Explore planning basics
-                </button>
-                <button type="button" className="northline-button-secondary" onClick={() => handleNavigate('plan')}>
-                  Go to planner
-                </button>
-              </div>
+            <div className="flex flex-wrap gap-3 lg:justify-end">
+              <button type="button" className="northline-button-primary" onClick={() => handleNavigate('learn')}>
+                Explore planning basics
+              </button>
+              <button type="button" className="northline-button-secondary" onClick={() => handleNavigate('plan')}>
+                Go to planner
+              </button>
             </div>
-          </section>
-        </div>
-      </DeferredHomeSection>
+          </div>
+        </section>
+      </div>
     </section>
   )
 
