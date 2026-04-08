@@ -32,11 +32,24 @@ const NAV_ITEMS = [
     ),
   },
   {
-    id: 'saved',
-    label: 'Saved',
+    id: 'analytics',
+    label: 'Analytics',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1Z" />
+        <path d="M3 3v18h18" />
+        <path d="m7 16 4-8 4 5 5-6" />
+      </svg>
+    ),
+  },
+  {
+    id: 'portfolio',
+    label: 'Portfolio',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 2a10 10 0 0 1 10 10" />
+        <path d="M12 12V2" />
+        <path d="M12 12h10" />
       </svg>
     ),
   },
@@ -51,6 +64,15 @@ const NAV_ITEMS = [
       </svg>
     ),
   },
+  {
+    id: 'saved',
+    label: 'Saved',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 4h12a1 1 0 0 1 1 1v15l-7-4-7 4V5a1 1 0 0 1 1-1Z" />
+      </svg>
+    ),
+  },
 ]
 
 export default function Sidebar({ activeView, onNavigate, savedCount, onNewAnalysis, hasResults }) {
@@ -60,7 +82,7 @@ export default function Sidebar({ activeView, onNavigate, savedCount, onNewAnaly
         <nav className="flex flex-1 gap-2 overflow-x-auto overflow-y-visible py-1.5 pr-1" aria-label="Primary navigation">
           {NAV_ITEMS.map((item) => {
             const isActive = activeView === item.id
-            const isDisabled = item.id === 'results' && !hasResults
+            const isDisabled = (item.id === 'results' || item.id === 'portfolio' || item.id === 'analytics') && !hasResults
 
             return (
               <button

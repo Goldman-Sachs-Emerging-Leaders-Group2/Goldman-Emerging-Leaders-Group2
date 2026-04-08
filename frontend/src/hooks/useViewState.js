@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const VALID_VIEWS = new Set(['home', 'plan', 'results', 'saved', 'learn'])
+const VALID_VIEWS = new Set(['home', 'plan', 'results', 'portfolio', 'analytics', 'saved', 'learn'])
 
 export function useViewState() {
   const [activeView, setActiveView] = useState('home')

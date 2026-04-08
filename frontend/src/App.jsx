@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import CalculatorForm from './components/CalculatorForm'
 import GrowthChart from './components/GrowthChart'
@@ -13,6 +13,10 @@ import SaveBar from './components/SaveBar'
 import FormSummary from './components/FormSummary'
 import ErrorBoundary from './components/ErrorBoundary'
 import LearnPanel from './components/LearnPanel'
+import PortfolioView from './components/PortfolioView'
+import AnalyticsView from './components/AnalyticsView'
+import CopilotFAB from './components/CopilotFAB'
+import CopilotPanel from './components/CopilotPanel'
 
 import { formatCurrency, formatPercent } from './utils/formatters'
 import { useTheme } from './hooks/useTheme'
@@ -82,6 +86,7 @@ function App() {
   const form = useFundForm()
   const calc = useCalculation()
   const history = useInvestmentHistory((msg) => calc.setCalculationError(msg))
+  const [copilotOpen, setCopilotOpen] = useState(false)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -465,47 +470,24 @@ function App() {
         error={history.saveError}
       />
 
-      <div className="grid gap-6">
-        <div className="northline-card rounded-[28px] p-5 sm:p-6">
-          <p className="northline-eyebrow mb-2">Growth path</p>
-          <h2 className="text-[1.6rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
-            Projected growth over time
-          </h2>
-          <div className="mt-5">
-            <GrowthChart results={calc.results} isCalculating={calc.isCalculating} goalAmount={form.goalAmount} />
-          </div>
-        </div>
-
-        <div className="northline-card rounded-[28px] p-5 sm:p-6">
-          <p className="northline-eyebrow mb-2">Comparison detail</p>
-          <h2 className="text-[1.6rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
-            Detailed metrics
-          </h2>
-          <div className="mt-5">
-            <ResultPanel results={calc.results} isCalculating={calc.isCalculating} riskTolerance={form.riskTolerance} />
-          </div>
+      <div className="northline-card rounded-[28px] p-5 sm:p-6">
+        <p className="northline-eyebrow mb-2">Comparison detail</p>
+        <h2 className="text-[1.6rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
+          Detailed metrics
+        </h2>
+        <div className="mt-5">
+          <ResultPanel results={calc.results} isCalculating={calc.isCalculating} riskTolerance={form.riskTolerance} />
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="northline-card rounded-[28px] p-5 sm:p-6">
-          <p className="northline-eyebrow mb-2">Guidance</p>
-          <h2 className="text-[1.6rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
-            Planning insights
-          </h2>
-          <div className="mt-5">
-            <InsightsPanel results={calc.results} isCalculating={calc.isCalculating} riskTolerance={form.riskTolerance} />
-          </div>
-        </div>
-
-        <div className="northline-card rounded-[28px] p-5 sm:p-6">
-          <p className="northline-eyebrow mb-2">Breakdown</p>
-          <h2 className="text-[1.6rem] font-semibold tracking-[-0.03em] text-[color:var(--text-primary)]">
-            What is driving the total
-          </h2>
-          <div className="mt-5">
-            <PieBreakdown result={calc.bestResult} isMulti={calc.isMulti} />
-          </div>
+      <div className="northline-card rounded-[28px] p-4 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[color:var(--text-secondary)]">
+            Growth projections, CAPM indicators, and deeper insights are in the Analytics tab.
+          </p>
+          <button type="button" className="northline-button-secondary" onClick={() => handleNavigate('analytics')}>
+            Open Analytics
+          </button>
         </div>
       </div>
     </section>
@@ -548,7 +530,20 @@ function App() {
 
   return (
     <div className="min-h-screen text-[color:var(--text-primary)]">
-      <PageHeader theme={theme} onToggleTheme={toggleTheme} onLogoClick={goHome} />
+      <PageHeader
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onLogoClick={goHome}
+        funds={form.funds}
+        selectedTickers={form.form.tickers}
+        onSelectFund={(ticker) => {
+          if (!form.form.tickers.includes(ticker)) {
+            form.handleToggleTicker(ticker)
+          }
+          navigateTo('plan')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+      />
       <Sidebar
         activeView={activeView}
         onNavigate={handleNavigate}
@@ -563,10 +558,42 @@ function App() {
           {activeView === 'home' && homeView}
           {activeView === 'plan' && planView}
           {activeView === 'results' && resultsView}
+          {activeView === 'portfolio' && (
+            <PortfolioView
+              results={calc.results}
+              bestResult={calc.bestResult}
+              primaryResult={calc.primaryResult}
+              hasResults={calc.hasResults}
+              resultCount={calc.resultCount}
+              onNavigate={handleNavigate}
+            />
+          )}
+          {activeView === 'analytics' && (
+            <AnalyticsView
+              results={calc.results}
+              isCalculating={calc.isCalculating}
+              isMulti={calc.isMulti}
+              bestResult={calc.bestResult}
+              goalAmount={form.goalAmount}
+              riskTolerance={form.riskTolerance}
+              onNavigate={handleNavigate}
+            />
+          )}
           {activeView === 'saved' && savedView}
           {activeView === 'learn' && <LearnPanel onStartPlan={() => handleNavigate('plan')} />}
         </main>
       </ErrorBoundary>
+
+      <CopilotFAB onClick={() => setCopilotOpen((v) => !v)} isOpen={copilotOpen} />
+      <CopilotPanel
+        isOpen={copilotOpen}
+        onClose={() => setCopilotOpen(false)}
+        results={calc.results}
+        funds={form.funds}
+        form={form.form}
+        activeView={activeView}
+        monthlyContribution={form.monthlyContribution}
+      />
 
       <footer className="border-t border-[color:var(--line)] bg-[color:var(--surface-elevated)]/92">
         <div className="mx-auto max-w-[1280px] px-4 py-6 text-sm leading-7 text-[color:var(--text-secondary)] sm:px-6 lg:px-8">
