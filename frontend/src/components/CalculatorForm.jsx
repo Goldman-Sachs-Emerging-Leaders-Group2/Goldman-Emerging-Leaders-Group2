@@ -17,7 +17,6 @@ const CalculatorForm = ({
   onSubmit,
   isCalculating,
   isLoadingAssets,
-  riskFreeRate,
 }) => {
   const atMax = form.tickers.length >= MAX_SELECTIONS
 
@@ -92,17 +91,6 @@ const CalculatorForm = ({
           />
           {errors.years && <p className="field-error">{errors.years}</p>}
         </div>
-      </div>
-
-      <div className="field-group">
-        <label>Risk-Free Rate <span className="field-hint">(from server)</span></label>
-        <input
-          type="text"
-          value={riskFreeRate != null ? formatPercent(riskFreeRate) : '—'}
-          readOnly
-          disabled
-          aria-label="Risk-free rate from last calculation"
-        />
       </div>
 
       <button

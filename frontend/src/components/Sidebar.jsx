@@ -22,6 +22,12 @@ const NavIcon = ({ type }) => {
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
+    history: (
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
     analytics: (
       <svg viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" />
@@ -42,6 +48,7 @@ const NAV_ITEMS = [
   { to: '/', icon: 'dashboard', label: 'Dashboard' },
   { to: '/calculator', icon: 'calculator', label: 'Calculator' },
   { to: '/portfolio', icon: 'portfolio', label: 'Portfolio' },
+  { to: '/history', icon: 'history', label: 'History' },
   { to: '/analytics', icon: 'analytics', label: 'Analytics' },
   { to: '/settings', icon: 'settings', label: 'Settings' },
 ]
@@ -72,13 +79,6 @@ const Sidebar = () => {
         ))}
       </nav>
 
-      <div className="sidebar-upgrade">
-        <span className="sidebar-upgrade-title">Upgrade to Pro</span>
-        <p className="sidebar-upgrade-text">
-          Unlock advanced analytics, real-time alerts and premium insights.
-        </p>
-        <button className="sidebar-upgrade-btn">Upgrade</button>
-      </div>
     </aside>
   )
 }

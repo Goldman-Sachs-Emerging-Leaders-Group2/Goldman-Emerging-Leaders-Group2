@@ -54,7 +54,7 @@ const getChartColor = (index) => {
   return getAssetColor(index)
 }
 
-const GrowthChart = ({ results, isCalculating }) => {
+const GrowthChart = ({ results, isCalculating, timeRangeYears = null }) => {
   const tickers = Object.keys(results)
   const hasResults = tickers.length > 0
   const isMulti = tickers.length > 1
@@ -71,9 +71,15 @@ const GrowthChart = ({ results, isCalculating }) => {
     )
   }
 
-  const data = isMulti
+  const fullData = isMulti
     ? generateMultiProjectionData(results)
     : generateProjectionData(results[tickers[0]])
+
+  let data = fullData
+  if (timeRangeYears != null) {
+    data = fullData.filter((point) => point.year <= timeRangeYears)
+    if (data.length < 2) data = fullData.slice(0, 2)
+  }
 
   const dataKeys = isMulti ? tickers : ['value']
   const lastPoint = data[data.length - 1]

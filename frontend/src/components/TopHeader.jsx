@@ -8,6 +8,7 @@ const ROUTE_TITLES = {
   '/': 'Dashboard',
   '/calculator': 'Calculator',
   '/portfolio': 'Portfolio',
+  '/history': 'History',
   '/analytics': 'Analytics',
   '/settings': 'Settings',
 }

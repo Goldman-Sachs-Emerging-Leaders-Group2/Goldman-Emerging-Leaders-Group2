@@ -57,6 +57,24 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {
+        if (ex.getMessage() != null && ex.getMessage().contains("AI service")) {
+            logger.warn("Copilot service error: {}", ex.getMessage());
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of(
+                            "error", "COPILOT_UNAVAILABLE",
+                            "message", ex.getMessage()
+                    ));
+        }
+        logger.error("Unexpected runtime error", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                        "error", "INTERNAL_ERROR",
+                        "message", "An unexpected error occurred."
+                ));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleUnexpected(Exception ex) {
         logger.error("Unexpected error", ex);

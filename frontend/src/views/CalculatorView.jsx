@@ -15,7 +15,7 @@ const CalculatorView = () => {
   const {
     assets, form, fieldErrors, results, hasResults,
     isCalculating, isLoadingAssets, isStale,
-    riskFreeRate, statusMessage,
+    statusMessage,
     handleChange, handleToggleTicker, handleSubmit,
   } = useAppContext()
 
@@ -67,7 +67,6 @@ const CalculatorView = () => {
             onSubmit={handleSubmit}
             isCalculating={isCalculating}
             isLoadingAssets={isLoadingAssets}
-            riskFreeRate={riskFreeRate}
           />
         </article>
 

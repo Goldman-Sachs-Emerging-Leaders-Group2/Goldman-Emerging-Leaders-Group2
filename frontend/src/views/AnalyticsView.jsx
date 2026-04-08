@@ -5,7 +5,13 @@ import InsightsPanel from '../components/InsightsPanel'
 import { useAppContext } from '../context/AppContext'
 import { formatCurrency, formatDecimal, formatPercent } from '../utils/formatters'
 
-const TIME_RANGES = ['1D', '1W', '1M', '3M', 'YTD', '1Y']
+const TIME_RANGES = [
+  { label: '1Y', years: 1 },
+  { label: '3Y', years: 3 },
+  { label: '5Y', years: 5 },
+  { label: '10Y', years: 10 },
+  { label: 'Max', years: null },
+]
 
 const CAPM_METRICS = [
   { key: 'beta', label: 'Beta (β)', max: 2, format: (v) => formatDecimal(v, 2), color: '#16A34A' },
@@ -16,12 +22,21 @@ const CAPM_METRICS = [
   { key: 'futureValue', label: 'Future Value', format: formatCurrency, highlight: true },
 ]
 
-const AnalyticsView = () => {
+const EXPLAIN_PROMPTS = {
+  beta: 'Explain what beta means for my investment in simple terms',
+  capmReturn: 'Explain what CAPM Return means and why it matters',
+  expectedMarketReturn: 'Explain what Market Return means for my portfolio',
+  riskFreeRate: 'Explain what the Risk-Free Rate is and how it affects my returns',
+  expectedReturn: 'Explain what Expected Return means for my investment',
+  futureValue: 'Explain what Future Value means and how it is calculated',
+}
+
+const AnalyticsView = ({ onExplainMetric }) => {
   const { results, isCalculating, isStale, hasResults, isMulti } = useAppContext()
   const tickers = Object.keys(results)
 
   const [selectedTicker, setSelectedTicker] = useState(() => tickers[0] || '')
-  const [activeRange, setActiveRange] = useState('1Y')
+  const [activeRange, setActiveRange] = useState('Max')
 
   // Keep selectedTicker in sync
   const activeTicker = tickers.includes(selectedTicker) ? selectedTicker : tickers[0]
@@ -68,13 +83,13 @@ const AnalyticsView = () => {
             </span>
           </div>
           <div className="time-range-tabs">
-            {TIME_RANGES.map((range) => (
+            {TIME_RANGES.map(({ label }) => (
               <button
-                key={range}
-                className={`time-range-tab${range === activeRange ? ' active' : ''}`}
-                onClick={() => setActiveRange(range)}
+                key={label}
+                className={`time-range-tab${label === activeRange ? ' active' : ''}`}
+                onClick={() => setActiveRange(label)}
               >
-                {range}
+                {label}
               </button>
             ))}
           </div>
@@ -92,7 +107,7 @@ const AnalyticsView = () => {
             )}
           </div>
         </div>
-        <GrowthChart results={results} isCalculating={isCalculating} />
+        <GrowthChart results={results} isCalculating={isCalculating} timeRangeYears={TIME_RANGES.find((r) => r.label === activeRange)?.years ?? null} />
       </article>
 
       {/* Bottom two-column: Insights + CAPM Indicators */}
@@ -116,7 +131,21 @@ const AnalyticsView = () => {
                 const displayKey = aliasKey || key
                 return (
                   <div className="capm-indicator-row" key={displayKey}>
-                    <span className="capm-indicator-label">{label}</span>
+                    <span className="capm-indicator-label">
+                      {label}
+                      {onExplainMetric && (
+                        <button
+                          className="explain-this-btn"
+                          onClick={() => onExplainMetric(EXPLAIN_PROMPTS[displayKey] || `Explain ${label}`)}
+                          title={`Explain ${label}`}
+                          aria-label={`Explain ${label}`}
+                        >
+                          <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
+                            <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" />
+                          </svg>
+                        </button>
+                      )}
+                    </span>
                     {max != null && (
                       <div className="capm-indicator-bar-track">
                         <div

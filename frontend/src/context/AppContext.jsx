@@ -23,6 +23,7 @@ export const AppProvider = ({ children }) => {
   const [loadError, setLoadError] = useState('')
   const [calculationError, setCalculationError] = useState('')
   const [notifications, setNotifications] = useState([])
+  const [history, setHistory] = useState([])
 
   const prevStaleRef = useRef(false)
 
@@ -167,6 +168,20 @@ export const AppProvider = ({ children }) => {
 
       setResults(newResults)
 
+      setHistory((prev) => [
+        {
+          id: Date.now(),
+          timestamp: Date.now(),
+          form: {
+            tickers: [...form.tickers],
+            investment: Number(form.investment),
+            years: Number(form.years),
+          },
+          results: { ...newResults },
+        },
+        ...prev,
+      ].slice(0, 50))
+
       const successTickers = Object.keys(newResults).join(', ')
       addNotification('success', `Calculation complete for ${successTickers}`)
 
@@ -231,6 +246,8 @@ export const AppProvider = ({ children }) => {
 
   const riskFreeRate = primaryResult?.riskFreeRate ?? null
 
+  const clearHistory = useCallback(() => setHistory([]), [])
+
   const clearResults = useCallback(() => {
     setResults({})
     setLastCalculatedForm(null)
@@ -260,6 +277,8 @@ export const AppProvider = ({ children }) => {
     handleToggleTicker,
     handleSubmit,
     clearResults,
+    history,
+    clearHistory,
     addNotification,
     markAllRead,
     clearNotifications,
